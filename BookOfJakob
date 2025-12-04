@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Balanced Edition</title>
+    <title>Book of Jakob - Final Bugfix</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -42,7 +42,7 @@
             transition: background 1s;
         }
 
-        /* --- TITEL (ZURÜCK ZUM ORIGINAL DESIGN) --- */
+        /* --- TITEL --- */
         .title-container {
             position: absolute;
             top: 20px;
@@ -53,7 +53,6 @@
             font-size: 3.8rem;
             font-weight: 900;
             text-transform: uppercase;
-            /* Der komplexe Gold-Look */
             background: linear-gradient(to bottom, var(--gold-light) 20%, var(--gold) 50%, var(--gold-dark) 80%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -63,15 +62,11 @@
             letter-spacing: 2px;
             margin: 0;
         }
-        /* Roter Punkt im O */
         .game-title .red-dot {
-            display: inline-block;
-            width: 25px; height: 25px;
+            display: inline-block; width: 25px; height: 25px;
             background: radial-gradient(circle, #ff4444, #990000);
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            margin: 0 4px;
-            transform: translateY(-8px);
+            border-radius: 50%; border: 2px solid var(--gold);
+            margin: 0 4px; transform: translateY(-8px);
             box-shadow: 0 0 5px red;
         }
 
@@ -83,7 +78,7 @@
         }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        /* --- WALZEN BEREICH --- */
+        /* --- WALZEN --- */
         .main-game-area {
             display: flex; gap: 12px; padding: 20px;
             background: rgba(0, 0, 0, 0.5);
@@ -100,7 +95,7 @@
 
         .reel {
             width: 95px; height: 285px;
-            background: #fdfdfd; /* Helles Papier-Weiß */
+            background: #fdfdfd;
             border-radius: 4px; overflow: hidden;
             display: flex; flex-direction: column; position: relative;
         }
@@ -123,7 +118,6 @@
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        /* Styled Text Symbole */
         .sym-text { -webkit-text-stroke: 1px #000; text-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
         .sym-10 { color: #1e90ff; font-family: sans-serif; letter-spacing: -5px; }
         .sym-J  { color: #1e90ff; }
@@ -170,8 +164,9 @@
         .btn:active { transform: translateY(2px); box-shadow: none; }
         
         .btn-auto { background: #3498db; width: 60px; height: 50px; font-size: 12px; }
-        .btn-auto.active { background: #e74c3c; }
-        
+        .btn-auto.active { background: #e74c3c; animation: blinkBorder 1s infinite; }
+        @keyframes blinkBorder { 50% { border: 1px solid #fff; } }
+
         .btn-spin {
             background: linear-gradient(to bottom, #27ae60, #2ecc71);
             width: 100px; height: 60px; font-size: 20px;
@@ -228,22 +223,16 @@
 
     <script>
         // --- BALANCED MATH MODEL ---
-        // Hier wurde die Häufigkeit (Weight) angepasst.
-        // Höhere Zahlen = Kommt öfter vor.
         const SYMBOLS = {
-            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 2 }, // Sehr selten (Top Symbol)
-            BOOK:  { type: 'emoji', char: '📖', weight: 4 },  // Selten, aber erreichbar (Feature)
-            
-            // Mid Value (Artefakte)
+            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 2 }, 
+            BOOK:  { type: 'emoji', char: '📖', weight: 4 }, 
             PHARAO:{ type: 'emoji', char: '👺', weight: 6 },
             STATUE:{ type: 'emoji', char: '🗿', weight: 7 },
-            
-            // Low Value (Buchstaben) - Diese kommen oft, um kleine Gewinne zu geben
             A:     { type: 'text',  char: 'A',  cls: 'sym-A', weight: 12 },
             K:     { type: 'text',  char: 'K',  cls: 'sym-K', weight: 14 },
             Q:     { type: 'text',  char: 'Q',  cls: 'sym-Q', weight: 16 },
             J:     { type: 'text',  char: 'J',  cls: 'sym-J', weight: 18 },
-            TEN:   { type: 'text',  char: '10', cls: 'sym-10', weight: 22 } // Kommt am häufigsten
+            TEN:   { type: 'text',  char: '10', cls: 'sym-10', weight: 22 }
         };
 
         let symbolPool = [];
@@ -262,6 +251,7 @@
         const spinBtn = document.getElementById('spinBtn');
         const autoBtn = document.getElementById('autoBtn');
         const overlay = document.getElementById('overlay');
+        const bonusText = document.getElementById('bonusText');
 
         reels.forEach(r => r.innerHTML = getRandomReelHTML());
         
@@ -289,16 +279,28 @@
         function toggleAuto() {
             isAuto = !isAuto;
             autoBtn.classList.toggle('active');
+            // Nur starten, wenn nicht eh schon gedreht wird
             if(isAuto && !isSpinning) spin();
         }
-        function manualSpin() { if(isAuto) toggleAuto(); spin(); }
+        
+        function manualSpin() { 
+            // Bei manuellem Klick Auto ausmachen
+            if(isAuto) toggleAuto(); 
+            spin(); 
+        }
 
         function spin() {
             if(isSpinning) return;
             let bet = parseFloat(betInp.value);
 
+            // Einsatz abziehen (wenn keine Freispiele)
             if(freeSpins === 0) {
-                if(balance < bet) { alert("Nicht genug Guthaben!"); return; }
+                if(balance < bet) { 
+                    alert("Nicht genug Guthaben!"); 
+                    // Auto Modus stoppen wenn pleite
+                    if(isAuto) toggleAuto();
+                    return; 
+                }
                 balance -= bet;
             } else {
                 freeSpins--;
@@ -359,7 +361,6 @@
             let first = line[0];
             let count = 1;
             
-            // Linkes Symbol bestimmt die Linie (Buch ist Joker)
             for(let i=1; i<5; i++) {
                 if(line[i] === first || line[i] === 'BOOK' || first === 'BOOK') {
                     count++;
@@ -371,15 +372,11 @@
 
             if(count >= 3) {
                 let mult = 5; 
-                // Jakob zahlt massiv
                 if(first === 'JAKOB') mult = 100;
-                // Mid Symbols zahlen gut
                 else if(first === 'PHARAO' || first === 'STATUE') mult = 30;
-                // Low Symbols zahlen weniger
                 else if(first === 'A' || first === 'K') mult = 10;
                 
                 let lineWin = bet * mult * (count - 2); 
-                // Kleiner Boost für 4er oder 5er Reihen
                 if(count > 3) lineWin *= 2;
                 
                 win += lineWin;
@@ -396,12 +393,32 @@
                 updateUI();
             }
 
-            if(freeSpins > 0 || isAuto) {
-                let delay = (win > 0 || triggerBonus) ? 2000 : 600;
-                setTimeout(spin, delay);
-            } else if (freeSpins === 0) {
-                document.body.classList.remove('bonus-active');
-                document.getElementById('bonusText').style.display = 'none';
+            // --- BUGFIX LOGIK FÜR AUTO SPIN UND FREISPIEL ENDE ---
+            
+            if (freeSpins > 0) {
+                // Wir sind MITTEN im Freispiel -> Immer automatisch weiter
+                setTimeout(spin, 1500);
+            } 
+            else {
+                // Freispiele sind 0. Waren wir gerade im Bonus Modus?
+                if (document.body.classList.contains('bonus-active')) {
+                    // JA: Bonus ist JETZT vorbei.
+                    // Erstmal UI aufräumen
+                    document.body.classList.remove('bonus-active');
+                    bonusText.style.display = 'none';
+                    spinBtn.innerText = "SPIN";
+                    
+                    // Kurze Pause, damit der Spieler checkt, dass der Bonus vorbei ist.
+                    // Danach: Wenn Auto an ist, mit normalem Einsatz weiter.
+                    if (isAuto) {
+                        setTimeout(spin, 2500); 
+                    }
+                } 
+                else if (isAuto) {
+                    // Ganz normaler Auto-Spin im Basisspiel
+                    let delay = (win > 0 || triggerBonus) ? 2000 : 600;
+                    setTimeout(spin, delay);
+                }
             }
         }
 
@@ -410,9 +427,8 @@
         function updateFreeSpinUI() {
             if(freeSpins > 0) {
                 document.body.classList.add('bonus-active');
-                let ind = document.getElementById('bonusText');
-                ind.style.display = 'block';
-                ind.innerText = "FREISPIELE: " + freeSpins;
+                bonusText.style.display = 'block';
+                bonusText.innerText = "FREISPIELE: " + freeSpins;
                 spinBtn.innerText = freeSpins;
             } else {
                 spinBtn.innerText = "SPIN";
