@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book of Jakob - Original</title>
+    <style>
+        /* --- GRUNDEINSTELLUNGEN & HINTERGRUND --- */
+        :root {
+            --gold-light: #f3e5ab;
+            --gold: #d4af37;
+            --gold-dark: #aa8822;
+            --ui-bg-dark: #0a0a0a;
+        }
+
+        body {
+            /* HIER WIRD DEIN BILD GELADEN (EXAKTER DATEINAME) */
+            background-image: url('dsc05439-1000x668.jpeg');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; /* UI nach unten schieben */
+            height: 100vh;
+            margin: 0;
+            color: white;
+            overflow: hidden;
+            user-select: none;
+            /* Dunkler Schleier über dem Hintergrundbild, damit das Spiel "aufpoppt" */
+            box-shadow: inset 0 0 200px rgba(0,0,0,0.7);
+        }
+        
+        /* Abdunklung des Hintergrunds */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.65); /* Etwas dunkler, damit man die Walzen besser sieht */
+            z-index: -1;
+        }
+
+
+        /* --- TITEL (Nachbau des Logos) --- */
+        .title-container {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+        .game-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            /* Komplexer Gold-Text-Effekt */
+            background: linear-gradient(to bottom, var(--gold-light) 20%, var(--gold) 50%, var(--gold-dark) 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+            position: relative;
+            display: inline-block;
+        }
+        /* Roter Punkt im "O" */
+        .game-title .red-dot {
+            display: inline-block;
+            width: 25px; height: 25px;
+            background: radial-gradient(circle, #ff4444, #990000);
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            margin: 0 2px;
+            transform: translateY(-5px);
+        }
+
+
+        /* --- WALZEN BEREICH (Nachbau der goldenen Rahmen) --- */
+        .main-game-area {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            /* Hintergrund hinter den Walzen etwas abdunkeln */
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .reel-frame {
+            /* Der äußere goldene Rahmen für jede Walze */
+            padding: 8px;
+            background: linear-gradient(45deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .reel {
+            width: 90px;
+            height: 270px; /* 3x 90px Symbole */
+            /* Heller Hintergrund IN der Walze */
+            background: linear-gradient(to bottom, #e8dbc3, #d4c5a3);
+            border: 2px solid var(--gold-dark);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- SYMBOLE --- */
+        .symbol {
+            height: 90px;
+            width: 90px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 55px;
+        }
+        
+        /* STYLING FÜR DEIN FOTO ALS SYMBOL */
+        .symbol img.jakob-symbol {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Schneidet das Bild quadratisch zu ohne es zu verzerren */
+            object-position: center 20%; /* Fokussiert eher auf das Gesicht oben */
+            border-radius: 4px;
+            border: 3px solid var(--gold);
+            box-sizing: border-box;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Gewinn-Animation (Pulsieren) */
+        .symbol.win-anim img, .symbol.win-anim {
+            animation: winPulse 0.8s infinite alternate ease-in-out;
+            z-index: 2;
+            position: relative;
+        }
+        @keyframes winPulse {
+            from { transform: scale(1); filter: brightness(1); }
+            to { transform: scale(1.15); filter: brightness(1.3) drop-shadow(0 0 15px var(--gold)); }
+        }
+
+
+        /* --- BIG WIN BANNER (Absolut mittig) --- */
+        .big-win-overlay {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(to bottom, var(--gold), #997c22);
+            padding: 20px 50px;
+            border-radius: 10px;
+            border: 4px solid #fff;
+            box-shadow: 0 0 60px rgba(255,215,0,0.8);
+            text-align: center;
+            z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .big-win-overlay.show { transform: translate(-50%, -50%) scale(1); }
+        .big-win-overlay h2 { margin: 0; font-size: 2.5rem; text-shadow: 2px 2px 4px #000; }
+        .big-win-overlay h3 { margin: 10px 0 0 0; font-size: 3.5rem; color: #fff; text-shadow: 3px 3px 0 var(--gold-dark), 5px 5px 0 #000; font-weight: 900; }
+
+
+        /* --- UI LEISTE UNTEN (Exakter Nachbau) --- */
+        .bottom-ui-bar {
+            width: 100%;
+            background: var(--ui-bg-dark);
+            border-top: 3px solid var(--gold-dark);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Generische Button Stile */
+        .ui-btn {
+            border: none; cursor: pointer; font-weight: bold; color: white;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.5); transition: transform 0.1s;
+        }
+        .ui-btn:active { transform: translateY(2px); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+        .ui-btn:disabled { filter: grayscale(1); cursor: not-allowed; transform: none; }
+
+        /* Oranger Info Button (i) */
+        .btn-info {
+            width: 45px; height: 45px;
+            background: linear-gradient(to bottom, #ff9900, #cc7700);
+            border-radius: 8px; font-size: 24px; font-family: serif;
+            border: 2px solid var(--gold-dark);
+        }
+
+        /* Graue +/- Buttons */
+        .btn-adjust {
+            width: 35px; height: 35px;
+            background: linear-gradient(to bottom, #666, #444);
+            font-size: 20px; border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        /* Anzeige-Boxen (COINS / BET) */
+        .display-group {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .display-label {
+            font-size: 0.8rem; color: var(--gold); font-weight: bold; margin-bottom: 4px;
+        }
+        .display-box-container {
+            display: flex; align-items: center; gap: 5px;
+            background: #222; padding: 5px; border-radius: 8px; border: 1px solid #444;
+        }
+        .display-value {
+            background: #000; color: #fff;
+            font-size: 1.1rem; font-weight: bold;
+            padding: 6px 15px; min-width: 100px; text-align: center;
+            border: 2px solid var(--gold-dark); border-radius: 4px;
+        }
+
+        /* Blaue AUTO PLAY Button */
+        .btn-auto {
+            width: 70px; height: 55px;
+            background: linear-gradient(to bottom, #2980b9, #1c5a83);
+            border-radius: 10px; font-size: 0.9rem; line-height: 1.1;
+            border: 2px solid #3498db;
+        }
+        .btn-auto.active { background: linear-gradient(to bottom, #c0392b, #962d22); border-color: #e74c3c; }
+
+        /* Großer Grüner SPIN Button */
+        .btn-spin {
+            width: 130px; height: 65px;
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            border-radius: 12px; font-size: 1.8rem; text-transform: uppercase;
+            border: 3px solid #2ecc71; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Münz-Partikel */
+        .coin-particle {
+            position: fixed; width: 30px; height: 30px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23ffd700" stroke="%23d4af37" stroke-width="5"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="%23d4af37" font-weight="bold">$</text></svg>');
+            z-index: 200; pointer-events: none;
+            animation: coinFall 3s linear forwards;
+        }
+        @keyframes coinFall { to { transform: translateY(110vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="title-container">
+        <div class="game-title">BOOK <span class="red-dot"></span>F JAKOB</div>
+    </div>
+
+    <div class="main-game-area">
+        <div class="reel-frame"><div class="reel" id="reel0"></div></div>
+        <div class="reel-frame"><div class="reel" id="reel1"></div></div>
+        <div class="reel-frame"><div class="reel" id="reel2"></div></div>
+        <div class="reel-frame"><div class="reel" id="reel3"></div></div>
+        <div class="reel-frame"><div class="reel" id="reel4"></div></div>
+    </div>
+
+    <div class="big-win-overlay" id="bigWinOverlay">
+        <h2>BIG WIN!</h2>
+        <h3 id="bigWinAmount">5,000 COINS!</h3>
+    </div>
+
+    <div class="bottom-ui-bar">
+        <button class="ui-btn btn-info">i</button>
+
+        <div class="display-group">
+            <div class="display-label">COINS</div>
+            <div class="display-box-container">
+                <button class="ui-btn btn-adjust" onclick="changeBalance(-100)">-</button>
+                <div class="display-value" id="balanceDisplay">5,000.00</div>
+                <button class="ui-btn btn-adjust" onclick="changeBalance(100)">+</button>
+            </div>
+        </div>
+
+        <div class="display-group">
+            <div class="display-label">BET</div>
+            <div class="display-box-container">
+                <button class="ui-btn btn-adjust" onclick="changeBet(-1)">-</button>
+                <div class="display-value" id="betDisplay">1,00</div>
+                <button class="ui-btn btn-adjust" onclick="changeBet(1)">+</button>
+            </div>
+        </div>
+
+        <button id="autoBtn" class="ui-btn btn-auto" onclick="toggleAuto()">AUTO<br>PLAY</button>
+        <button id="spinBtn" class="ui-btn btn-spin" onclick="manualSpin()">SPIN</button>
+    </div>
+
+    <script>
+        // --- KONFIGURATION ---
+        // WICHTIG: Hier steht jetzt dein exakter Dateiname!
+        const SYMBOLS = {
+            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 3 }, // Dein Foto
+            STAFF: { type: 'emoji', char: '🏺', weight: 5 },
+            PIPE:  { type: 'emoji', char: '⚱️', weight: 5 },
+            BUST:  { type: 'emoji', char: '🗿', weight: 6 },
+            MASK:  { type: 'emoji', char: '👺', weight: 7 },
+            ANUBIS:{ type: 'emoji', char: '🐕', weight: 8 },
+            A:     { type: 'emoji', char: '🇦', weight: 10 },
+            K:     { type: 'emoji', char: '🇰', weight: 11 },
+            Q:     { type: 'emoji', char: '🇶', weight: 12 },
+            J:     { type: 'emoji', char: '🇯', weight: 13 },
+            TEN:   { type: 'emoji', char: '🔟', weight: 15 }
+        };
+
+        let symbolPool = [];
+        for (let key in SYMBOLS) {
+            for (let i = 0; i < SYMBOLS[key].weight; i++) {
+                symbolPool.push(key);
+            }
+        }
+
+        // --- VARIABLEN ---
+        let balance = 5000.00;
+        let currentBet = 1.00;
+        let isSpinning = false;
+        let isAutoSpinning = false;
+
+        // --- DOM ELEMENTS ---
+        const reels = [0,1,2,3,4].map(i => document.getElementById(`reel${i}`));
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const betDisplay = document.getElementById('betDisplay');
+        const spinBtn = document.getElementById('spinBtn');
+        const autoBtn = document.getElementById('autoBtn');
+        const bigWinOverlay = document.getElementById('bigWinOverlay');
+
+        // Init
+        reels.forEach(reel => reel.innerHTML = generateReelHTML());
+        updateUI();
+
+        // --- FUNKTIONEN ---
+        function getWeightedSymbolKey() {
+            return symbolPool[Math.floor(Math.random() * symbolPool.length)];
+        }
+
+        // Generiert das HTML für ein Symbol (Bild oder Emoji)
+        function generateSymbolHTML(symbolKey) {
+            const symData = SYMBOLS[symbolKey];
+            if (symData.type === 'image') {
+                // WICHTIG: Klasse 'jakob-symbol' für das CSS Styling
+                return `<div class="symbol" data-key="${symbolKey}"><img src="${symData.src}" class="jakob-symbol" alt="Jakob"></div>`;
+            } else {
+                return `<div class="symbol" data-key="${symbolKey}">${symData.char}</div>`;
+            }
+        }
+
+        function generateReelHTML() {
+            let html = '';
+            for(let i=0; i<3; i++) html += generateSymbolHTML(getWeightedSymbolKey());
+            return html;
+        }
+
+        function formatMoney(amount) {
+             return amount.toFixed(2).replace('.', ',');
+        }
+
+        function updateUI() {
+            balanceDisplay.innerText = formatMoney(balance);
+            betDisplay.innerText = formatMoney(currentBet);
+        }
+
+        function changeBalance(amount) { balance += amount; if(balance<0) balance=0; updateUI(); }
+        function changeBet(amount) { 
+            if(isSpinning||isAutoSpinning) return;
+            currentBet += amount; 
+            if(currentBet<1.00) currentBet=1.00; if(currentBet>100.00) currentBet=100.00; 
+            updateUI(); 
+        }
+
+        function toggleAuto() {
+            isAutoSpinning = !isAutoSpinning;
+            if(isAutoSpinning) {
+                autoBtn.classList.add('active'); autoBtn.innerHTML = "STOP<br>AUTO";
+                if(!isSpinning) spin();
+            } else {
+                autoBtn.classList.remove('active'); autoBtn.innerHTML = "AUTO<br>PLAY";
+            }
+        }
+        function manualSpin() { if(isAutoSpinning) toggleAuto(); spin(); }
+
+        // --- SPIN LOGIK ---
+        function spin() {
+            if (isSpinning || balance < currentBet) return;
+            balance -= currentBet;
+            updateUI();
+            isSpinning = true;
+            spinBtn.disabled = true;
+            bigWinOverlay.classList.remove('show');
+
+            let finalGrid = [];
+            reels.forEach((reel, index) => {
+                // Animationen entfernen
+                reel.querySelectorAll('.symbol').forEach(s => s.classList.remove('win-anim'));
+                
+                let interval = setInterval(() => reel.innerHTML = generateReelHTML(), 50);
+
+                setTimeout(() => {
+                    clearInterval(interval);
+                    let reelSymbols = [];
+                    let html = '';
+                    for(let i=0; i<3; i++) {
+                        let key = getWeightedSymbolKey();
+                        reelSymbols.push(key);
+                        html += generateSymbolHTML(key);
+                    }
+                    reel.innerHTML = html;
+                    finalGrid.push(reelSymbols);
+                    if(index === 4) onSpinEnd(finalGrid);
+                }, 500 + (index * 250));
+            });
+        }
+
+        function onSpinEnd(grid) {
+            isSpinning = false; spinBtn.disabled = false;
+            let totalWin = 0;
+
+            // Gewinnprüfung (Mittellinie, mind. 3 gleiche)
+            const middleLine = grid.map(col => col[1]);
+            const firstSymbol = middleLine[0];
+            let matchCount = 1;
+            for(let i=1; i<5; i++) { if(middleLine[i] === firstSymbol) matchCount++; else break; }
+
+            if (matchCount >= 3) {
+                let baseMult = 10 - SYMBOLS[firstSymbol].weight; // Seltenere Symbole = höherer Multiplikator
+                if(baseMult < 1) baseMult = 1;
+                if(firstSymbol === 'JAKOB') baseMult = 50; // Jakob Bonus
+
+                let winAmount = currentBet * baseMult * matchCount;
+                
+                // Spezialfall: 5x Jakob = Hauptgewinn wie im Bild
+                if(matchCount === 5 && firstSymbol === 'JAKOB') {
+                     winAmount = 5000; // Fixer Hauptgewinn
+                     triggerBigWin(winAmount);
+                } else if (winAmount >= currentBet * 20) {
+                    triggerBigWin(winAmount);
+                }
+                
+                totalWin += winAmount;
+                // Animation aktivieren
+                for(let i=0; i<matchCount; i++) reels[i].children[1].classList.add('win-anim');
+            }
+
+            if(totalWin > 0) { balance += totalWin; updateUI(); }
+            if(isAutoSpinning) setTimeout(spin, totalWin > 0 ? 2500 : 1000);
+        }
+
+        function triggerBigWin(amount) {
+            document.getElementById('bigWinAmount').innerText = formatMoney(amount) + " COINS!";
+            bigWinOverlay.classList.add('show');
+            // Münzregen
+            for(let i=0; i<50; i++) {
+                let coin = document.createElement('div'); coin.className = 'coin-particle';
+                coin.style.left = Math.random()*95+'vw'; coin.style.top = -50+'px';
+                coin.style.animationDuration = (Math.random()*2+2)+'s';
+                document.body.appendChild(coin);
+                setTimeout(()=>coin.remove(), 4000);
+            }
+        }
+    </script>
+</body>
+</html>
