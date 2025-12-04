@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Final Bugfix</title>
+    <title>Book of Jakob - Cheat Edition</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -279,12 +279,10 @@
         function toggleAuto() {
             isAuto = !isAuto;
             autoBtn.classList.toggle('active');
-            // Nur starten, wenn nicht eh schon gedreht wird
             if(isAuto && !isSpinning) spin();
         }
         
         function manualSpin() { 
-            // Bei manuellem Klick Auto ausmachen
             if(isAuto) toggleAuto(); 
             spin(); 
         }
@@ -293,11 +291,9 @@
             if(isSpinning) return;
             let bet = parseFloat(betInp.value);
 
-            // Einsatz abziehen (wenn keine Freispiele)
             if(freeSpins === 0) {
                 if(balance < bet) { 
                     alert("Nicht genug Guthaben!"); 
-                    // Auto Modus stoppen wenn pleite
                     if(isAuto) toggleAuto();
                     return; 
                 }
@@ -339,7 +335,6 @@
             let win = 0;
             let triggerBonus = false;
 
-            // 1. SCATTER (Buch)
             let books = 0;
             grid.forEach(col => col.forEach(key => { if(key === 'BOOK') books++; }));
             
@@ -356,7 +351,6 @@
                 }
             }
 
-            // 2. LINIE (Mitte)
             let line = grid.map(c => c[1]);
             let first = line[0];
             let count = 1;
@@ -393,29 +387,21 @@
                 updateUI();
             }
 
-            // --- BUGFIX LOGIK FÜR AUTO SPIN UND FREISPIEL ENDE ---
-            
+            // AUTO-SPIN UND BONUS-ENDE LOGIK
             if (freeSpins > 0) {
-                // Wir sind MITTEN im Freispiel -> Immer automatisch weiter
                 setTimeout(spin, 1500);
             } 
             else {
-                // Freispiele sind 0. Waren wir gerade im Bonus Modus?
                 if (document.body.classList.contains('bonus-active')) {
-                    // JA: Bonus ist JETZT vorbei.
-                    // Erstmal UI aufräumen
                     document.body.classList.remove('bonus-active');
                     bonusText.style.display = 'none';
                     spinBtn.innerText = "SPIN";
-                    
-                    // Kurze Pause, damit der Spieler checkt, dass der Bonus vorbei ist.
-                    // Danach: Wenn Auto an ist, mit normalem Einsatz weiter.
+                    // Kurze Pause nach Bonus, dann Auto-Check
                     if (isAuto) {
                         setTimeout(spin, 2500); 
                     }
                 } 
                 else if (isAuto) {
-                    // Ganz normaler Auto-Spin im Basisspiel
                     let delay = (win > 0 || triggerBonus) ? 2000 : 600;
                     setTimeout(spin, delay);
                 }
@@ -455,6 +441,24 @@
                 setTimeout(()=>p.remove(), 2000);
             }
         }
+
+        // --- CHEAT CODE LOGIK (abgasskandal) ---
+        let inputSequence = [];
+        const cheatString = "abgasskandal";
+
+        window.addEventListener('keyup', (e) => {
+            inputSequence.push(e.key.toLowerCase());
+            if (inputSequence.length > cheatString.length) {
+                inputSequence.shift();
+            }
+            if (inputSequence.join('') === cheatString) {
+                balance += 1000000;
+                updateUI();
+                showOverlay("CHEAT!", "+ 1 MIO €");
+                confetti(); // Extra Belohnung
+                inputSequence = [];
+            }
+        });
         
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
