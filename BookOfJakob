@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - High Roller</title>
+    <title>Book of Jakob - Balanced Edition</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -11,7 +11,6 @@
             --gold: #d4af37;
             --gold-dark: #aa8822;
             --ui-bg-dark: #111;
-            --neon-red: #ff3333;
         }
 
         body {
@@ -33,22 +32,17 @@
             box-shadow: inset 0 0 200px rgba(0,0,0,0.8);
         }
 
-        /* Abdunklung */
         body::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: -1;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.65); z-index: -1;
         }
         
-        /* Bonus Modus Hintergrund */
         body.bonus-active::before {
-            background: rgba(80, 0, 0, 0.7); /* Roter Schimmer */
+            background: rgba(80, 0, 0, 0.7); /* Roter Schimmer im Bonus */
             transition: background 1s;
         }
 
-        /* --- TITEL --- */
+        /* --- TITEL (ZURÜCK ZUM ORIGINAL DESIGN) --- */
         .title-container {
             position: absolute;
             top: 20px;
@@ -56,106 +50,98 @@
             z-index: 10;
         }
         .game-title {
-            font-size: 3.5rem;
+            font-size: 3.8rem;
             font-weight: 900;
             text-transform: uppercase;
-            background: linear-gradient(to bottom, #fff 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            /* Der komplexe Gold-Look */
+            background: linear-gradient(to bottom, var(--gold-light) 20%, var(--gold) 50%, var(--gold-dark) 80%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 2px 0 #000);
+            filter: drop-shadow(0 4px 2px rgba(0,0,0,0.9));
+            position: relative;
+            display: inline-block;
+            letter-spacing: 2px;
             margin: 0;
         }
+        /* Roter Punkt im O */
+        .game-title .red-dot {
+            display: inline-block;
+            width: 25px; height: 25px;
+            background: radial-gradient(circle, #ff4444, #990000);
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            margin: 0 4px;
+            transform: translateY(-8px);
+            box-shadow: 0 0 5px red;
+        }
+
         .bonus-indicator {
             display: none;
-            color: #ff3333;
-            font-size: 2rem;
-            font-weight: bold;
-            text-shadow: 0 0 15px red;
-            margin-top: 5px;
+            color: #ff3333; font-size: 2rem; font-weight: bold;
+            text-shadow: 0 0 15px red; margin-top: 5px;
             animation: pulse 0.5s infinite alternate;
         }
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
         /* --- WALZEN BEREICH --- */
         .main-game-area {
-            display: flex;
-            gap: 12px;
-            padding: 20px;
+            display: flex; gap: 12px; padding: 20px;
             background: rgba(0, 0, 0, 0.5);
             border: 3px solid var(--gold-dark);
-            border-radius: 15px;
-            margin-bottom: 20px;
+            border-radius: 15px; margin-bottom: 20px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
         .reel-frame {
             padding: 5px;
             background: linear-gradient(to bottom, #443300, #aa8822, #443300);
-            border-radius: 6px;
-            box-shadow: inset 0 0 10px #000;
+            border-radius: 6px; box-shadow: inset 0 0 10px #000;
         }
 
         .reel {
-            width: 95px;
-            height: 285px; /* 3 x 95px */
-            background: #fff; /* Weißer Hintergrund wie bei echten Slots */
-            border-radius: 4px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            width: 95px; height: 285px;
+            background: #fdfdfd; /* Helles Papier-Weiß */
+            border-radius: 4px; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
         }
-        /* Schatten in der Walze für 3D Effekt */
         .reel::after {
             content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.6) 100%);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 15%, rgba(0,0,0,0) 85%, rgba(0,0,0,0.6) 100%);
             pointer-events: none;
         }
 
-        /* --- SYMBOLE DESIGN --- */
+        /* --- SYMBOLE --- */
         .symbol {
             height: 95px; width: 95px; flex-shrink: 0;
             display: flex; justify-content: center; align-items: center;
-            font-size: 50px;
-            font-family: 'Times New Roman', serif;
-            font-weight: bold;
+            font-size: 50px; font-family: 'Times New Roman', serif; font-weight: bold;
         }
 
-        /* Jakob Bild */
         .symbol img.jakob-symbol {
             width: 90%; height: 90%; object-fit: cover; object-position: center 20%;
             border-radius: 5px; border: 3px solid var(--gold);
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        /* Buchstaben Design (K, Q, J, A, 10) */
-        .sym-text {
-            /* Dicker Rand um Text */
-            -webkit-text-stroke: 1px #000;
-            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
-        }
+        /* Styled Text Symbole */
+        .sym-text { -webkit-text-stroke: 1px #000; text-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
         .sym-10 { color: #1e90ff; font-family: sans-serif; letter-spacing: -5px; }
         .sym-J  { color: #1e90ff; }
         .sym-Q  { color: #32cd32; }
         .sym-K  { color: #ff4500; }
         .sym-A  { color: #ffd700; }
-        
-        /* Buch & Artefakte */
         .sym-emoji { filter: drop-shadow(0 0 2px #000); }
 
-        /* Gewinn Animation */
         .symbol.win-anim {
-            background-color: rgba(255, 215, 0, 0.3);
-            animation: pop 0.6s infinite alternate;
-            z-index: 10;
+            background-color: rgba(255, 215, 0, 0.4);
+            animation: pop 0.6s infinite alternate; z-index: 10;
         }
         @keyframes pop { from { transform: scale(0.9); } to { transform: scale(1.1); } }
-
 
         /* --- UI LEISTE --- */
         .bottom-ui-bar {
             width: 100%;
-            background: linear-gradient(to bottom, #333, #000);
+            background: linear-gradient(to bottom, #222, #000);
             border-top: 4px solid var(--gold);
             padding: 10px 20px;
             display: flex; justify-content: center; gap: 15px; align-items: center;
@@ -163,28 +149,20 @@
         }
 
         .ui-group {
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 5px;
-            padding: 5px 10px;
-            display: flex; flex-direction: column; align-items: center;
+            background: #222; border: 1px solid #444; border-radius: 5px;
+            padding: 5px 10px; display: flex; flex-direction: column; align-items: center;
         }
         .label { color: #888; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; }
 
-        /* Eingabefeld für Wetten */
         input.bet-input {
             background: #000; color: #fff; border: 1px solid var(--gold);
             width: 80px; text-align: center; font-size: 18px; font-weight: bold;
             padding: 5px; border-radius: 4px;
         }
-        /* Pfeile im Input entfernen */
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        .balance-display {
-            color: #fff; font-size: 18px; font-weight: bold; min-width: 100px; text-align: center;
-        }
+        .balance-display { color: #fff; font-size: 18px; font-weight: bold; min-width: 100px; text-align: center; }
 
-        /* Buttons */
         .btn {
             border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer;
             box-shadow: 0 3px 0 rgba(0,0,0,0.5); transition: transform 0.1s;
@@ -192,7 +170,7 @@
         .btn:active { transform: translateY(2px); box-shadow: none; }
         
         .btn-auto { background: #3498db; width: 60px; height: 50px; font-size: 12px; }
-        .btn-auto.active { background: #e74c3c; animation: blinkBorder 1s infinite; }
+        .btn-auto.active { background: #e74c3c; }
         
         .btn-spin {
             background: linear-gradient(to bottom, #27ae60, #2ecc71);
@@ -201,25 +179,24 @@
         }
         .btn-spin:disabled { filter: grayscale(1); cursor: not-allowed; }
 
-        /* OVERLAY MESSAGE */
+        /* OVERLAY */
         .overlay {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-            background: rgba(0,0,0,0.9); padding: 40px; border: 5px solid var(--gold);
+            background: rgba(0,0,0,0.95); padding: 40px; border: 4px solid var(--gold);
             text-align: center; border-radius: 20px; z-index: 100; transition: transform 0.3s;
             box-shadow: 0 0 100px var(--gold);
         }
         .overlay.show { transform: translate(-50%, -50%) scale(1); }
-        .overlay h1 { color: var(--gold); font-size: 60px; margin: 0; text-shadow: 0 0 10px #fff; }
+        .overlay h1 { color: var(--gold); font-size: 50px; margin: 0; text-shadow: 0 0 10px #fff; }
         .overlay h2 { color: #fff; margin: 10px 0 0 0; font-size: 30px; }
 
-        /* Partikel */
         .particle { position: fixed; width: 15px; height: 15px; background: gold; z-index: 200; pointer-events: none; }
     </style>
 </head>
 <body>
 
     <div class="title-container">
-        <div class="game-title">BOOK OF JAKOB</div>
+        <div class="game-title">BOOK <span class="red-dot"></span>F JAKOB</div>
         <div class="bonus-indicator" id="bonusText">!!! FREISPIELE !!!</div>
     </div>
 
@@ -241,59 +218,55 @@
             <div class="label">Guthaben</div>
             <div class="balance-display" id="balanceDisplay">5000.00 €</div>
         </div>
-
         <div class="ui-group">
             <div class="label">Einsatz</div>
             <input type="number" id="betInput" class="bet-input" value="10" min="1" onchange="validateBet()">
         </div>
-
         <button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()">AUTO</button>
         <button class="btn btn-spin" id="spinBtn" onclick="manualSpin()">SPIN</button>
     </div>
 
     <script>
-        // --- NEUE SYMBOLE & GEWICHTUNGEN (MEHR GEWINNE!) ---
-        // type: 'text' für schöne Buchstaben, 'emoji' für Artefakte, 'image' für Jakob
-        // weight: Je höher die Zahl, desto öfter kommt es.
+        // --- BALANCED MATH MODEL ---
+        // Hier wurde die Häufigkeit (Weight) angepasst.
+        // Höhere Zahlen = Kommt öfter vor.
         const SYMBOLS = {
-            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 8 }, // Jakob kommt jetzt oft! (Vorher 3)
-            BOOK:  { type: 'emoji', char: '📖', weight: 15 },  // Bücher kommen SEHR oft! (Vorher 2)
-            PHARAO:{ type: 'emoji', char: '👺', weight: 10 },
-            STATUE:{ type: 'emoji', char: '🗿', weight: 10 },
-            A:     { type: 'text',  char: 'A',  cls: 'sym-A', weight: 20 },
-            K:     { type: 'text',  char: 'K',  cls: 'sym-K', weight: 22 },
-            Q:     { type: 'text',  char: 'Q',  cls: 'sym-Q', weight: 25 },
-            J:     { type: 'text',  char: 'J',  cls: 'sym-J', weight: 30 },
-            TEN:   { type: 'text',  char: '10', cls: 'sym-10', weight: 35 }
+            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 2 }, // Sehr selten (Top Symbol)
+            BOOK:  { type: 'emoji', char: '📖', weight: 4 },  // Selten, aber erreichbar (Feature)
+            
+            // Mid Value (Artefakte)
+            PHARAO:{ type: 'emoji', char: '👺', weight: 6 },
+            STATUE:{ type: 'emoji', char: '🗿', weight: 7 },
+            
+            // Low Value (Buchstaben) - Diese kommen oft, um kleine Gewinne zu geben
+            A:     { type: 'text',  char: 'A',  cls: 'sym-A', weight: 12 },
+            K:     { type: 'text',  char: 'K',  cls: 'sym-K', weight: 14 },
+            Q:     { type: 'text',  char: 'Q',  cls: 'sym-Q', weight: 16 },
+            J:     { type: 'text',  char: 'J',  cls: 'sym-J', weight: 18 },
+            TEN:   { type: 'text',  char: '10', cls: 'sym-10', weight: 22 } // Kommt am häufigsten
         };
 
-        // Pool erstellen
         let symbolPool = [];
         for (let key in SYMBOLS) {
             for (let i = 0; i < SYMBOLS[key].weight; i++) symbolPool.push(key);
         }
 
-        // --- STATE ---
         let balance = 5000.00;
         let isSpinning = false;
         let isAuto = false;
         let freeSpins = 0;
 
-        // --- DOM ---
         const reels = [0,1,2,3,4].map(i => document.getElementById(`reel${i}`));
         const balEl = document.getElementById('balanceDisplay');
         const betInp = document.getElementById('betInput');
         const spinBtn = document.getElementById('spinBtn');
         const autoBtn = document.getElementById('autoBtn');
         const overlay = document.getElementById('overlay');
-        const body = document.body;
 
-        // Init
         reels.forEach(r => r.innerHTML = getRandomReelHTML());
         
         function getRandomKey() { return symbolPool[Math.floor(Math.random() * symbolPool.length)]; }
 
-        // Generiert das HTML je nach Symbol-Typ
         function getSymbolHTML(key) {
             const s = SYMBOLS[key];
             if(s.type === 'image') return `<div class="symbol" data-key="${key}"><img src="${s.src}" class="jakob-symbol"></div>`;
@@ -310,7 +283,7 @@
         function validateBet() {
             let val = parseFloat(betInp.value);
             if(isNaN(val) || val < 0.1) val = 0.10;
-            betInp.value = val; // Kein Max-Limit mehr, High Roller!
+            betInp.value = val;
         }
 
         function toggleAuto() {
@@ -324,9 +297,8 @@
             if(isSpinning) return;
             let bet = parseFloat(betInp.value);
 
-            // Einsatz abziehen (außer Freispiel)
             if(freeSpins === 0) {
-                if(balance < bet) { alert("Pleite! Seite neu laden für mehr Geld."); return; }
+                if(balance < bet) { alert("Nicht genug Guthaben!"); return; }
                 balance -= bet;
             } else {
                 freeSpins--;
@@ -338,18 +310,14 @@
             spinBtn.disabled = true;
             overlay.classList.remove('show');
 
-            // Walzen drehen
             let finalGrid = [];
             reels.forEach((reel, i) => {
-                // Alte Animationen weg
                 reel.querySelectorAll('.symbol').forEach(s => s.classList.remove('win-anim'));
-                
                 let speed = 50;
                 let timer = setInterval(() => reel.innerHTML = getRandomReelHTML(), speed);
 
                 setTimeout(() => {
                     clearInterval(timer);
-                    // Ergebnis setzen
                     let colData = [];
                     let html = '';
                     for(let r=0; r<3; r++) {
@@ -359,25 +327,23 @@
                     }
                     reel.innerHTML = html;
                     finalGrid.push(colData);
-
                     if(i === 4) checkWin(finalGrid, bet);
-                }, 400 + (i * 150)); // Schnellerer Stop
+                }, 400 + (i * 200));
             });
         }
 
         function checkWin(grid, bet) {
             isSpinning = false; spinBtn.disabled = false;
             let win = 0;
-            let msg = "";
             let triggerBonus = false;
 
-            // 1. SCATTER (Bücher zählen - egal wo)
+            // 1. SCATTER (Buch)
             let books = 0;
             grid.forEach(col => col.forEach(key => { if(key === 'BOOK') books++; }));
             
             if(books >= 3) {
                 triggerBonus = true;
-                win += bet * books * 2; // Scatter Gewinn
+                win += bet * books * 2; 
                 if(freeSpins > 0) {
                     freeSpins += 10;
                     showOverlay("RETRIGGER!", "+10 SPIELE");
@@ -389,37 +355,39 @@
             }
 
             // 2. LINIE (Mitte)
-            // Wir machen es einfach: Wenn 3 gleiche in der Mitte sind ODER Buch als Joker
-            let line = grid.map(c => c[1]); // Mittlere Reihe
+            let line = grid.map(c => c[1]);
             let first = line[0];
             let count = 1;
             
-            // Einfache Logik: Zähle Gleiche von links
+            // Linkes Symbol bestimmt die Linie (Buch ist Joker)
             for(let i=1; i<5; i++) {
-                // Buch ist Joker!
                 if(line[i] === first || line[i] === 'BOOK' || first === 'BOOK') {
                     count++;
-                    if(first === 'BOOK' && line[i] !== 'BOOK') first = line[i]; // Erstes Symbol war Buch, jetzt echtes Symbol setzen
+                    if(first === 'BOOK' && line[i] !== 'BOOK') first = line[i]; 
                 } else {
                     break;
                 }
             }
 
             if(count >= 3) {
-                // Gewinn berechnen
-                let mult = 5; // Basis
-                if(first === 'JAKOB') mult = 50;
-                if(first === 'A' || first === 'K') mult = 20;
+                let mult = 5; 
+                // Jakob zahlt massiv
+                if(first === 'JAKOB') mult = 100;
+                // Mid Symbols zahlen gut
+                else if(first === 'PHARAO' || first === 'STATUE') mult = 30;
+                // Low Symbols zahlen weniger
+                else if(first === 'A' || first === 'K') mult = 10;
                 
-                let lineWin = bet * mult * (count - 1); // Viel mehr Gewinn!
+                let lineWin = bet * mult * (count - 2); 
+                // Kleiner Boost für 4er oder 5er Reihen
+                if(count > 3) lineWin *= 2;
+                
                 win += lineWin;
-                
-                // Animation
                 for(let i=0; i<count; i++) reels[i].children[1].classList.add('win-anim');
                 
-                if(!triggerBonus && win > bet * 5) {
+                if(!triggerBonus && win > bet * 3) {
                     showOverlay("GEWINN!", win.toFixed(2) + " €");
-                    confetti();
+                    if(win > bet * 20) confetti();
                 }
             }
 
@@ -428,19 +396,16 @@
                 updateUI();
             }
 
-            // Auto weiter?
             if(freeSpins > 0 || isAuto) {
-                let delay = (win > 0 || triggerBonus) ? 2000 : 500;
+                let delay = (win > 0 || triggerBonus) ? 2000 : 600;
                 setTimeout(spin, delay);
-            } else if (freeSpins === 0 && document.body.classList.contains('bonus-active')) {
+            } else if (freeSpins === 0) {
                 document.body.classList.remove('bonus-active');
                 document.getElementById('bonusText').style.display = 'none';
             }
         }
 
-        function updateUI() {
-            balEl.innerText = balance.toFixed(2) + " €";
-        }
+        function updateUI() { balEl.innerText = balance.toFixed(2) + " €"; }
 
         function updateFreeSpinUI() {
             if(freeSpins > 0) {
@@ -463,7 +428,7 @@
         }
 
         function confetti() {
-            for(let i=0; i<30; i++) {
+            for(let i=0; i<40; i++) {
                 let p = document.createElement('div');
                 p.className = 'particle';
                 p.style.left = Math.random()*100+'vw';
@@ -478,7 +443,6 @@
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
         document.head.appendChild(styleSheet);
-
     </script>
 </body>
 </html>
