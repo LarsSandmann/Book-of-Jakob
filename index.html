@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Final No Intro</title>
+    <title>Book of Jakob - Intro Edition</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -31,6 +31,32 @@
             user-select: none;
             box-shadow: inset 0 0 200px rgba(0,0,0,0.8);
         }
+
+        /* --- INTRO OVERLAY --- */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        #intro-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        #intro-video { 
+            width: 100%; height: 100%; object-fit: cover; 
+        }
+        
+        #start-intro-btn {
+            position: absolute; bottom: 15%; 
+            padding: 20px 50px; font-size: 30px;
+            background: linear-gradient(to bottom, var(--gold), var(--gold-dark));
+            border: 3px solid #fff; border-radius: 15px;
+            color: #000; font-weight: 900; cursor: pointer;
+            box-shadow: 0 0 30px var(--gold);
+            animation: pulseBtn 1s infinite;
+            z-index: 10000;
+        }
+        @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
 
         body::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -186,6 +212,13 @@
 </head>
 <body>
 
+    <div id="intro-overlay">
+        <video id="intro-video" playsinline>
+            <source src="intro.mp4" type="video/mp4">
+        </video>
+        <button id="start-intro-btn" onclick="playIntro()">SPIEL STARTEN</button>
+    </div>
+
     <div class="title-container">
         <div class="game-title">BOOK <span class="red-dot"></span>F JAKOB</div>
         <div class="bonus-indicator" id="bonusText"></div>
@@ -218,7 +251,35 @@
     </div>
 
     <script>
-        // --- PAYTABLE & REGELN ---
+        // --- INTRO LOGIK ---
+        function playIntro() {
+            const vid = document.getElementById('intro-video');
+            const btn = document.getElementById('start-intro-btn');
+            
+            // Button verstecken
+            btn.style.display = 'none';
+            
+            // Video abspielen
+            vid.play().then(() => {
+                // Wenn Video fertig ist -> Intro schließen
+                vid.onended = function() {
+                    closeIntro();
+                };
+            }).catch(e => {
+                console.log("Video Error:", e);
+                closeIntro(); // Falls Fehler, sofort schließen
+            });
+        }
+        
+        function closeIntro() {
+            const overlay = document.getElementById('intro-overlay');
+            overlay.classList.add('hidden');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 1000);
+        }
+
+        // --- PAYTABLE & REGELN (Classic Mechanics) ---
         const PAYTABLE = {
             JAKOB:  { type: 'image', src: 'dsc05439-1000x668.jpeg', minHit: 2, pays: {2: 10, 3: 100, 4: 1000, 5: 5000} },
             PHARAO: { type: 'emoji', char: '👺', minHit: 2, pays: {2: 5, 3: 40, 4: 400, 5: 2000} },
@@ -400,11 +461,11 @@
             if(spinWin > 0) {
                 balance += spinWin;
                 if (!wonFreeSpins) {
-                    // ZEIGE GEWINN AN (AUCH KLEINE)
                     if (spinWin > totalBet * 10) {
                          showOverlay("BIG WIN", formatMoney(spinWin));
                          confetti();
                     } else {
+                         // Win Popup für jeden Gewinn
                          showOverlay("GEWINN", formatMoney(spinWin));
                     }
                 }
@@ -502,7 +563,7 @@
             }
         }
 
-        // CHEAT
+        // CHEAT: "abgasskandal"
         let inputSequence = [];
         const cheatString = "abgasskandal";
         window.addEventListener('keyup', (e) => {
