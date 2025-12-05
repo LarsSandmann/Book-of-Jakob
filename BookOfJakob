@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Intro Edition</title>
+    <title>Book of Jakob - Perfect Intro</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -42,11 +42,14 @@
         #intro-overlay.hidden { opacity: 0; pointer-events: none; }
         
         #intro-video { 
-            width: 100%; height: 100%; object-fit: cover; 
+            width: 100%; 
+            height: 100%; 
+            /* HIER IST DER FIX: contain statt cover */
+            object-fit: contain; 
         }
         
         #start-intro-btn {
-            position: absolute; bottom: 15%; 
+            position: absolute; bottom: 10%; 
             padding: 20px 50px; font-size: 30px;
             background: linear-gradient(to bottom, var(--gold), var(--gold-dark));
             border: 3px solid #fff; border-radius: 15px;
@@ -563,7 +566,7 @@
             }
         }
 
-        // CHEAT: "abgasskandal"
+        // CHEAT
         let inputSequence = [];
         const cheatString = "abgasskandal";
         window.addEventListener('keyup', (e) => {
