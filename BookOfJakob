@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Classic Mechanics</title>
+    <title>Book of Jakob - No Interruptions</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -75,12 +75,6 @@
             position: relative;
         }
 
-        /* Linien-Anzeige (optional für Debugging, hier versteckt) */
-        .payline-overlay {
-            position: absolute; top:0; left:0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 20; display: none;
-        }
-
         .reel-frame {
             padding: 5px;
             background: linear-gradient(to bottom, #443300, #aa8822, #443300);
@@ -129,7 +123,6 @@
             animation: pop 0.8s infinite alternate;
         }
         
-        /* Expanding Animation Style */
         .symbol.expand-anim {
             background: gold;
             border: 2px solid white;
@@ -227,8 +220,6 @@
     <script>
         // --- PAYTABLE & REGELN (Book of Ra Classic Logic) ---
         
-        // Multiplikatoren gelten pro LINIE (Einsatz / 9)
-        // minHit: Mindestanzahl für einen Gewinn
         const PAYTABLE = {
             JAKOB:  { type: 'image', src: 'dsc05439-1000x668.jpeg', minHit: 2, pays: {2: 10, 3: 100, 4: 1000, 5: 5000} },
             PHARAO: { type: 'emoji', char: '👺', minHit: 2, pays: {2: 5, 3: 40, 4: 400, 5: 2000} },
@@ -240,28 +231,24 @@
             J:      { type: 'text',  char: 'J',  cls: 'sym-J', minHit: 3, pays: {3: 5, 4: 25, 5: 100} },
             TEN:    { type: 'text',  char: '10', cls: 'sym-10', minHit: 3, pays: {3: 5, 4: 25, 5: 100} },
             BOOK:   { type: 'emoji', char: '📖', minHit: 3, pays: {3: 2, 4: 20, 5: 200}, isScatter: true } 
-            // Buch Scatter Payout ist Multiplikator vom GESAMT-Einsatz!
         };
 
-        // Die 9 fixen Gewinnlinien (0=Oben, 1=Mitte, 2=Unten)
         const PAYLINES = [
-            [1, 1, 1, 1, 1], // 1: Mitte
-            [0, 0, 0, 0, 0], // 2: Oben
-            [2, 2, 2, 2, 2], // 3: Unten
-            [0, 1, 2, 1, 0], // 4: V-Form
-            [2, 1, 0, 1, 2], // 5: Umgekehrtes V
-            [0, 0, 1, 2, 2], // 6: Diag Oben -> Unten (Variante)
-            [2, 2, 1, 0, 0], // 7: Diag Unten -> Oben (Variante)
-            [1, 2, 2, 2, 1], // 8: Mitte-Unten
-            [1, 0, 0, 0, 1]  // 9: Mitte-Oben
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [0, 1, 2, 1, 0],
+            [2, 1, 0, 1, 2],
+            [0, 0, 1, 2, 2],
+            [2, 2, 1, 0, 0],
+            [1, 2, 2, 2, 1],
+            [1, 0, 0, 0, 1]
         ];
 
-        // Gewichtung für die Walzen (Random Pool)
-        // Wir füllen einen virtuellen "Strip" mit Symbolen basierend auf Wahrscheinlichkeit
         let reelStrip = [];
         const weights = {
             JAKOB: 2, PHARAO: 3, STATUE: 5, SCARAB: 5,
-            A: 8, K: 8, Q: 10, J: 10, TEN: 12, BOOK: 4 // Buch muss erreichbar sein
+            A: 8, K: 8, Q: 10, J: 10, TEN: 12, BOOK: 4 
         };
         for(let k in weights) { for(let i=0; i<weights[k]; i++) reelStrip.push(k); }
 
@@ -270,7 +257,7 @@
         let isSpinning = false;
         let isAuto = false;
         let freeSpins = 0;
-        let specialExpandingSymbol = null; // Für Freispiele
+        let specialExpandingSymbol = null;
 
         // --- DOM ---
         const reelsDOM = [0,1,2,3,4].map(i => document.getElementById(`reel${i}`));
@@ -287,7 +274,6 @@
         
         function validateBet() {
             let val = parseFloat(betInp.value);
-            // Einsatz muss durch 9 teilbar sein für saubere Linienberechnung (optional, hier egal)
             if(isNaN(val) || val < 0.9) val = 0.90;
             betInp.value = val.toFixed(2);
         }
@@ -308,7 +294,7 @@
             if(isSpinning) return;
             let totalBet = parseFloat(betInp.value);
 
-            // Einsatz abziehen (wenn keine Freispiele)
+            // Einsatz abziehen
             if(freeSpins === 0) {
                 if(balance < totalBet) { 
                     alert("Guthaben leer! Thorsten muss helfen (Cheat)..."); 
@@ -326,33 +312,25 @@
             spinBtn.disabled = true;
             overlay.classList.remove('show');
             
-            // Animation starten
-            // Wir erzeugen das Endergebnis sofort, animieren aber die Walzen
             let finalGrid = generateGrid();
             
-            // Walzen drehen (visuell)
             reelsDOM.forEach((r, i) => {
-                // Alte Win-Klassen entfernen
                 r.querySelectorAll('.symbol').forEach(s => {
                     s.classList.remove('win-anim');
                     s.classList.remove('expand-anim');
                 });
 
                 let speed = 60;
-                let steps = 10 + (i * 5); // Jede Walze dreht länger
+                let steps = 10 + (i * 5); 
                 let currentStep = 0;
                 
                 let spinInterval = setInterval(() => {
-                    // Zufällige Symbole während Dreh
                     r.innerHTML = getRandomReelHTML();
                     currentStep++;
                     
                     if(currentStep >= steps) {
                         clearInterval(spinInterval);
-                        // Endergebnis setzen
-                        renderReel(i, finalGrid[i]); // finalGrid ist Spalte-basiert? Nein, Spalte i
-                        
-                        // Wenn letzte Walze steht -> Auswertung
+                        renderReel(i, finalGrid[i]);
                         if(i === 4) evaluateSpin(finalGrid, totalBet);
                     }
                 }, speed);
@@ -365,69 +343,55 @@
             let spinWin = 0;
             let lineBet = totalBet / 9;
             let wonFreeSpins = false;
-            let wonLines = []; // Um Animationen zu steuern
 
-            // --- 1. GEWINNLINIEN AUSWERTUNG ---
+            // --- 1. GEWINNLINIEN ---
             for(let lineIdx = 0; lineIdx < 9; lineIdx++) {
-                let coords = PAYLINES[lineIdx]; // z.B. [1,1,1,1,1]
-                
-                // Hole Symbole auf dieser Linie
+                let coords = PAYLINES[lineIdx];
                 let lineSymbols = coords.map((row, col) => grid[col][row]);
                 
-                // Bestimme das Target-Symbol (Das erste, das kein BUCH ist)
-                // Buch ist Wild für alles außer expanding (in Bonus). Hier im Basisspiel normal Wild.
                 let targetSymbol = null;
                 for(let s of lineSymbols) {
                     if(s !== 'BOOK') { targetSymbol = s; break; }
                 }
-                // Wenn nur Bücher: Target ist Buch (5 Bücher auf Linie = Jackpot, aber Scatter zahlt meist besser)
                 if(!targetSymbol) targetSymbol = 'BOOK'; 
 
-                // Zähle zusammenhängende Treffer von links
                 let count = 0;
                 for(let s of lineSymbols) {
                     if(s === targetSymbol || s === 'BOOK') {
                         count++;
                     } else {
-                        break; // Kette unterbrochen
+                        break; 
                     }
                 }
 
-                // Prüfe Paytable
                 let payInfo = PAYTABLE[targetSymbol];
                 if(count >= payInfo.minHit) {
-                    // Gewinn!
                     let winVal = payInfo.pays[count] * lineBet;
                     spinWin += winVal;
                     
-                    // Visuell markieren (nur die gewinnenden Symbole auf der Linie)
                     for(let c=0; c<count; c++) {
                         let reel = c;
                         let row = coords[c];
-                        // DOM Element finden und Klasse adden
                         let symEl = reelsDOM[reel].children[row];
                         if(symEl) symEl.classList.add('win-anim');
                     }
                 }
             }
 
-            // --- 2. SCATTER AUSWERTUNG (Bücher) ---
+            // --- 2. SCATTER ---
             let bookCount = 0;
             grid.forEach(col => col.forEach(s => { if(s === 'BOOK') bookCount++; }));
             
             if(bookCount >= 3) {
-                // Scatter Win (Basiert auf Gesamteinsatz!)
                 let scatterPay = PAYTABLE.BOOK.pays[bookCount] * totalBet;
                 spinWin += scatterPay;
                 
-                // Trigger Freispiele
                 wonFreeSpins = true;
                 if(freeSpins > 0) {
-                    freeSpins += 10; // Retrigger
+                    freeSpins += 10;
                     showOverlay("RETRIGGER!", "+10 GAMES");
                 } else {
                     freeSpins = 10;
-                    // Zufälliges Expanding Symbol wählen (kein Buch)
                     let keys = Object.keys(PAYTABLE).filter(k => k !== 'BOOK');
                     specialExpandingSymbol = keys[Math.floor(Math.random() * keys.length)];
                     
@@ -440,9 +404,8 @@
                 }
             }
 
-            // --- 3. EXPANDING SYMBOL (Nur in Freispielen) ---
-            if(freeSpins > 0 && specialExpandingSymbol && !wonFreeSpins) { // Wenn gerade gewonnen, erst nächster Spin
-                // Zähle, auf wie vielen Walzen das Symbol vorkommt (egal wo)
+            // --- 3. EXPANDING SYMBOL ---
+            if(freeSpins > 0 && specialExpandingSymbol && !wonFreeSpins) {
                 let reelsWithSymbol = [];
                 for(let col=0; col<5; col++) {
                     if(grid[col].includes(specialExpandingSymbol)) {
@@ -453,13 +416,8 @@
                 let expandCount = reelsWithSymbol.length;
                 let expInfo = PAYTABLE[specialExpandingSymbol];
                 
-                // Zahlt es? (Wie Scatter Paytable, aber auf allen 9 Linien)
-                // "Zahlt wie normale Linie, aber auf allen Linien und muss nicht verbunden sein"
-                // Im Classic: Wenn minHit erreicht, expandieren die Walzen und zahlen für alle aktiven Linien.
                 if(expandCount >= expInfo.minHit) {
-                    // Visuelle Expansion
                     reelsWithSymbol.forEach(col => {
-                        // Alle 3 Positionen der Walze visuell ersetzen
                         let reelEl = reelsDOM[col];
                         Array.from(reelEl.children).forEach(child => {
                             child.innerHTML = getSymbolInnerHTML(specialExpandingSymbol);
@@ -467,7 +425,6 @@
                         });
                     });
                     
-                    // Berechnung: Gewinn pro Linie für X Treffer * 9 Linien
                     let symbolWinPerLine = expInfo.pays[expandCount] * lineBet;
                     let totalExpandWin = symbolWinPerLine * 9;
                     
@@ -486,14 +443,12 @@
             }
             updateUI();
 
-            // Auto / Bonus Loop
             handleNextSpinLogic();
         }
 
         // --- HILFSFUNKTIONEN ---
 
         function generateGrid() {
-            // Erstellt 5 Spalten a 3 Symbole
             let g = [];
             for(let i=0; i<5; i++) {
                 let col = [];
@@ -514,7 +469,6 @@
             return `<span class="sym-emoji">${s.char}</span>`;
         }
         
-        // Rendert eine ganze Walze sofort (für Init oder Stop)
         function renderReel(colIndex, symbols) {
             let html = '';
             symbols.forEach(key => {
@@ -523,12 +477,10 @@
             reelsDOM[colIndex].innerHTML = html;
         }
         
-        // Rendert Grid (für Init)
         function renderGrid(grid) {
             grid.forEach((col, i) => renderReel(i, col));
         }
 
-        // Zufalls-HTML für Animation
         function getRandomReelHTML() {
             let html = '';
             for(let i=0; i<3; i++) {
@@ -550,8 +502,11 @@
                         bonusText.style.display = 'none';
                         specialExpandingSymbol = null;
                         spinBtn.innerText = "SPIN";
-                        alert("Bonusrunde beendet!");
-                        if (isAuto) setTimeout(startSpin, 1000);
+                        
+                        // KEIN POPUP MEHR: Nur kurzes Overlay
+                        showOverlay("BONUS ENDE", "Zurück zum Spiel");
+                        
+                        if (isAuto) setTimeout(startSpin, 2500);
                     }, 2000);
                 } 
                 else if (isAuto) {
@@ -612,7 +567,6 @@
             }
         });
 
-        // CSS Injection für Confetti
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
         document.head.appendChild(styleSheet);
