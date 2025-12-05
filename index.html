@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - No Interruptions</title>
+    <title>Book of Jakob - Win Popup Edition</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -14,6 +14,7 @@
         }
 
         body {
+            /* DEIN HINTERGRUNDBILD */
             background-image: url('dsc05439-1000x668.jpeg');
             background-size: cover;
             background-position: center top;
@@ -31,13 +32,30 @@
             box-shadow: inset 0 0 200px rgba(0,0,0,0.8);
         }
 
+        /* INTRO OVERLAY */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 9999; display: flex;
+            justify-content: center; align-items: center;
+            transition: opacity 1s ease-out;
+        }
+        #intro-overlay.hidden { opacity: 0; pointer-events: none; }
+        #intro-video { width: 100%; height: 100%; object-fit: cover; }
+        #start-btn-intro {
+            position: absolute; bottom: 50px; padding: 15px 30px;
+            font-size: 24px; background: var(--gold); border: none;
+            border-radius: 10px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 0 20px var(--gold); animation: pulseBtn 1s infinite;
+        }
+        @keyframes pulseBtn { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
         body::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.7); z-index: -1;
+            background: rgba(0, 0, 0, 0.65); z-index: -1;
         }
         
         body.bonus-active::before {
-            background: rgba(80, 0, 0, 0.85); /* Starker roter Kontrast im Bonus */
+            background: rgba(80, 0, 0, 0.7); /* Roter Schimmer im Bonus */
             transition: background 1s;
         }
 
@@ -82,7 +100,7 @@
         }
 
         .reel {
-            width: 95px; height: 285px; /* 3 Symbole a 95px */
+            width: 95px; height: 285px;
             background: #fdfdfd; border-radius: 4px; overflow: hidden;
             display: flex; flex-direction: column; position: relative;
         }
@@ -113,7 +131,6 @@
         .sym-A  { color: #ffd700; }
         .sym-emoji { filter: drop-shadow(0 0 2px #000); }
 
-        /* Animationen */
         .symbol.win-anim {
             z-index: 10;
             background: rgba(255, 215, 0, 0.3);
@@ -186,6 +203,13 @@
 </head>
 <body>
 
+    <div id="intro-overlay">
+        <video id="intro-video" playsinline>
+            <source src="intro.mp4" type="video/mp4">
+        </video>
+        <button id="start-btn-intro" onclick="startIntro()">SPIEL STARTEN</button>
+    </div>
+
     <div class="title-container">
         <div class="game-title">BOOK <span class="red-dot"></span>F JAKOB</div>
         <div class="bonus-indicator" id="bonusText"></div>
@@ -218,8 +242,25 @@
     </div>
 
     <script>
-        // --- PAYTABLE & REGELN (Book of Ra Classic Logic) ---
-        
+        // --- INTRO LOGIK ---
+        function startIntro() {
+            const vid = document.getElementById('intro-video');
+            const btn = document.getElementById('start-btn-intro');
+            const overlay = document.getElementById('intro-overlay');
+            btn.style.display = 'none';
+            const playPromise = vid.play();
+            if (playPromise !== undefined) {
+                playPromise.then(_ => { vid.onended = function() { closeIntro(); }; })
+                .catch(error => { console.log("Intro Error:", error); closeIntro(); });
+            }
+        }
+        function closeIntro() {
+            const overlay = document.getElementById('intro-overlay');
+            overlay.classList.add('hidden');
+            setTimeout(() => { overlay.style.display = 'none'; }, 1000);
+        }
+
+        // --- PAYTABLE & REGELN ---
         const PAYTABLE = {
             JAKOB:  { type: 'image', src: 'dsc05439-1000x668.jpeg', minHit: 2, pays: {2: 10, 3: 100, 4: 1000, 5: 5000} },
             PHARAO: { type: 'emoji', char: '👺', minHit: 2, pays: {2: 5, 3: 40, 4: 400, 5: 2000} },
@@ -234,15 +275,9 @@
         };
 
         const PAYLINES = [
-            [1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0],
-            [2, 2, 2, 2, 2],
-            [0, 1, 2, 1, 0],
-            [2, 1, 0, 1, 2],
-            [0, 0, 1, 2, 2],
-            [2, 2, 1, 0, 0],
-            [1, 2, 2, 2, 1],
-            [1, 0, 0, 0, 1]
+            [1, 1, 1, 1, 1], [0, 0, 0, 0, 0], [2, 2, 2, 2, 2],
+            [0, 1, 2, 1, 0], [2, 1, 0, 1, 2], [0, 0, 1, 2, 2],
+            [2, 2, 1, 0, 0], [1, 2, 2, 2, 1], [1, 0, 0, 0, 1]
         ];
 
         let reelStrip = [];
@@ -268,7 +303,6 @@
         const overlay = document.getElementById('overlay');
         const bonusText = document.getElementById('bonusText');
 
-        // Initiale Füllung
         let currentGrid = generateGrid();
         renderGrid(currentGrid);
         
@@ -288,16 +322,14 @@
             startSpin(); 
         }
 
-        // --- HAUPTSPIEL LOGIK ---
-        
         function startSpin() {
             if(isSpinning) return;
             let totalBet = parseFloat(betInp.value);
 
-            // Einsatz abziehen
             if(freeSpins === 0) {
                 if(balance < totalBet) { 
-                    alert("Guthaben leer! Thorsten muss helfen (Cheat)..."); 
+                    // KEIN Alert, lieber Overlay
+                    showOverlay("FEHLER", "Guthaben leer!");
                     if(isAuto) toggleAuto();
                     return; 
                 }
@@ -319,15 +351,12 @@
                     s.classList.remove('win-anim');
                     s.classList.remove('expand-anim');
                 });
-
                 let speed = 60;
                 let steps = 10 + (i * 5); 
                 let currentStep = 0;
-                
                 let spinInterval = setInterval(() => {
                     r.innerHTML = getRandomReelHTML();
                     currentStep++;
-                    
                     if(currentStep >= steps) {
                         clearInterval(spinInterval);
                         renderReel(i, finalGrid[i]);
@@ -344,49 +373,37 @@
             let lineBet = totalBet / 9;
             let wonFreeSpins = false;
 
-            // --- 1. GEWINNLINIEN ---
+            // 1. GEWINNLINIEN
             for(let lineIdx = 0; lineIdx < 9; lineIdx++) {
                 let coords = PAYLINES[lineIdx];
                 let lineSymbols = coords.map((row, col) => grid[col][row]);
-                
                 let targetSymbol = null;
-                for(let s of lineSymbols) {
-                    if(s !== 'BOOK') { targetSymbol = s; break; }
-                }
+                for(let s of lineSymbols) { if(s !== 'BOOK') { targetSymbol = s; break; } }
                 if(!targetSymbol) targetSymbol = 'BOOK'; 
-
                 let count = 0;
                 for(let s of lineSymbols) {
-                    if(s === targetSymbol || s === 'BOOK') {
-                        count++;
-                    } else {
-                        break; 
-                    }
+                    if(s === targetSymbol || s === 'BOOK') count++; else break;
                 }
-
                 let payInfo = PAYTABLE[targetSymbol];
                 if(count >= payInfo.minHit) {
                     let winVal = payInfo.pays[count] * lineBet;
                     spinWin += winVal;
-                    
                     for(let c=0; c<count; c++) {
-                        let reel = c;
-                        let row = coords[c];
+                        let reel = c; let row = coords[c];
                         let symEl = reelsDOM[reel].children[row];
                         if(symEl) symEl.classList.add('win-anim');
                     }
                 }
             }
 
-            // --- 2. SCATTER ---
+            // 2. SCATTER
             let bookCount = 0;
             grid.forEach(col => col.forEach(s => { if(s === 'BOOK') bookCount++; }));
-            
             if(bookCount >= 3) {
                 let scatterPay = PAYTABLE.BOOK.pays[bookCount] * totalBet;
                 spinWin += scatterPay;
-                
                 wonFreeSpins = true;
+                
                 if(freeSpins > 0) {
                     freeSpins += 10;
                     showOverlay("RETRIGGER!", "+10 GAMES");
@@ -394,28 +411,20 @@
                     freeSpins = 10;
                     let keys = Object.keys(PAYTABLE).filter(k => k !== 'BOOK');
                     specialExpandingSymbol = keys[Math.floor(Math.random() * keys.length)];
-                    
-                    let symChar = PAYTABLE[specialExpandingSymbol].char || PAYTABLE[specialExpandingSymbol].src;
-                    let msg = `Symbol: ${specialExpandingSymbol}`;
-                    if(PAYTABLE[specialExpandingSymbol].type === 'image') msg = "Symbol: JAKOB";
-                    
-                    showOverlay("BONUS!", `10 FREISPIELE\n${msg}`);
+                    let msg = (PAYTABLE[specialExpandingSymbol].type === 'image') ? "JAKOB" : PAYTABLE[specialExpandingSymbol].char;
+                    showOverlay("BONUS!", `10 FREISPIELE\nSYMBOL: ${msg}`);
                     updateBonusUI();
                 }
             }
 
-            // --- 3. EXPANDING SYMBOL ---
+            // 3. EXPANDING SYMBOL
             if(freeSpins > 0 && specialExpandingSymbol && !wonFreeSpins) {
                 let reelsWithSymbol = [];
                 for(let col=0; col<5; col++) {
-                    if(grid[col].includes(specialExpandingSymbol)) {
-                        reelsWithSymbol.push(col);
-                    }
+                    if(grid[col].includes(specialExpandingSymbol)) reelsWithSymbol.push(col);
                 }
-                
                 let expandCount = reelsWithSymbol.length;
                 let expInfo = PAYTABLE[specialExpandingSymbol];
-                
                 if(expandCount >= expInfo.minHit) {
                     reelsWithSymbol.forEach(col => {
                         let reelEl = reelsDOM[col];
@@ -424,30 +433,37 @@
                             child.classList.add('expand-anim');
                         });
                     });
-                    
                     let symbolWinPerLine = expInfo.pays[expandCount] * lineBet;
                     let totalExpandWin = symbolWinPerLine * 9;
-                    
                     spinWin += totalExpandWin;
-                    setTimeout(() => showOverlay("EXPANDING!", formatMoney(totalExpandWin)), 1000);
                 }
             }
 
-            // --- ENDE ---
+            // --- ENDE & POP-UP LOGIK ---
             if(spinWin > 0) {
                 balance += spinWin;
-                if(spinWin > totalBet * 10) {
-                    if(!wonFreeSpins) showOverlay("BIG WIN", formatMoney(spinWin));
-                    confetti();
+
+                // LOGIK: Wann zeigen wir was?
+                // 1. Wenn Freispiele gewonnen wurden, hat das "BONUS!" Pop-Up Vorrang (wurde oben schon gezeigt).
+                // 2. Wenn es ein Big Win ist -> "BIG WIN".
+                // 3. Sonst -> "GEWINN" + Betrag.
+
+                if (!wonFreeSpins) {
+                    if (spinWin > totalBet * 10) {
+                         showOverlay("BIG WIN", formatMoney(spinWin));
+                         confetti();
+                    } else {
+                         // HIER IST DAS NEUE POP-UP FÜR JEDEN GEWINN
+                         showOverlay("GEWINN", formatMoney(spinWin));
+                    }
                 }
             }
+            
             updateUI();
-
-            handleNextSpinLogic();
+            handleNextSpinLogic(spinWin > 0 || wonFreeSpins);
         }
 
         // --- HILFSFUNKTIONEN ---
-
         function generateGrid() {
             let g = [];
             for(let i=0; i<5; i++) {
@@ -457,30 +473,19 @@
             }
             return g;
         }
-
-        function getRandomSymbolKey() {
-            return reelStrip[Math.floor(Math.random() * reelStrip.length)];
-        }
-
+        function getRandomSymbolKey() { return reelStrip[Math.floor(Math.random() * reelStrip.length)]; }
         function getSymbolInnerHTML(key) {
             let s = PAYTABLE[key];
             if(s.type === 'image') return `<img src="${s.src}" class="jakob-symbol">`;
             if(s.type === 'text') return `<span class="sym-text ${s.cls}">${s.char}</span>`;
             return `<span class="sym-emoji">${s.char}</span>`;
         }
-        
         function renderReel(colIndex, symbols) {
             let html = '';
-            symbols.forEach(key => {
-                html += `<div class="symbol" data-key="${key}">${getSymbolInnerHTML(key)}</div>`;
-            });
+            symbols.forEach(key => { html += `<div class="symbol" data-key="${key}">${getSymbolInnerHTML(key)}</div>`; });
             reelsDOM[colIndex].innerHTML = html;
         }
-        
-        function renderGrid(grid) {
-            grid.forEach((col, i) => renderReel(i, col));
-        }
-
+        function renderGrid(grid) { grid.forEach((col, i) => renderReel(i, col)); }
         function getRandomReelHTML() {
             let html = '';
             for(let i=0; i<3; i++) {
@@ -490,35 +495,31 @@
             return html;
         }
 
-        function handleNextSpinLogic() {
+        function handleNextSpinLogic(wasWin) {
+            // Wenn Gewinn, etwas länger warten beim Auto-Spin, damit man Popup lesen kann
+            let autoDelay = wasWin ? 2000 : 800;
+
             if (freeSpins > 0) {
-                setTimeout(startSpin, 1500); // Automatischer Freispiel-Start
+                setTimeout(startSpin, 2000); 
             } 
             else {
                 if (document.body.classList.contains('bonus-active')) {
-                    // Bonus zu Ende
                     setTimeout(() => {
                         document.body.classList.remove('bonus-active');
                         bonusText.style.display = 'none';
                         specialExpandingSymbol = null;
                         spinBtn.innerText = "SPIN";
-                        
-                        // KEIN POPUP MEHR: Nur kurzes Overlay
                         showOverlay("BONUS ENDE", "Zurück zum Spiel");
-                        
                         if (isAuto) setTimeout(startSpin, 2500);
                     }, 2000);
                 } 
                 else if (isAuto) {
-                    setTimeout(startSpin, 800);
+                    setTimeout(startSpin, autoDelay);
                 }
             }
         }
 
-        function updateUI() {
-            balEl.innerText = formatMoney(balance);
-        }
-
+        function updateUI() { balEl.innerText = formatMoney(balance); }
         function updateBonusUI() {
             if(freeSpins > 0) {
                 document.body.classList.add('bonus-active');
@@ -528,9 +529,8 @@
                 spinBtn.innerText = freeSpins;
             }
         }
-
         function formatMoney(n) { return n.toFixed(2) + " €"; }
-
+        
         function showOverlay(t, v) {
             let el = document.getElementById('overlay');
             document.getElementById('overlayTitle').innerText = t;
