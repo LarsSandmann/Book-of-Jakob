@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book of Jakob - Schweigegeld Edition</title>
+    <title>Book of Jakob - Classic Mechanics</title>
     <style>
         /* --- GRUNDEINSTELLUNGEN --- */
         :root {
@@ -14,7 +14,6 @@
         }
 
         body {
-            /* DEIN HINTERGRUNDBILD */
             background-image: url('dsc05439-1000x668.jpeg');
             background-size: cover;
             background-position: center top;
@@ -34,57 +33,52 @@
 
         body::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.65); z-index: -1;
+            background: rgba(0, 0, 0, 0.7); z-index: -1;
         }
         
         body.bonus-active::before {
-            background: rgba(80, 0, 0, 0.7); /* Roter Schimmer im Bonus */
+            background: rgba(80, 0, 0, 0.85); /* Starker roter Kontrast im Bonus */
             transition: background 1s;
         }
 
         /* --- TITEL --- */
         .title-container {
-            position: absolute;
-            top: 20px;
-            text-align: center;
-            z-index: 10;
+            position: absolute; top: 20px; text-align: center; z-index: 10;
         }
         .game-title {
-            font-size: 3.8rem;
-            font-weight: 900;
-            text-transform: uppercase;
+            font-size: 3.8rem; font-weight: 900; text-transform: uppercase;
             background: linear-gradient(to bottom, var(--gold-light) 20%, var(--gold) 50%, var(--gold-dark) 80%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 4px 2px rgba(0,0,0,0.9));
-            position: relative;
-            display: inline-block;
-            letter-spacing: 2px;
-            margin: 0;
+            position: relative; display: inline-block; letter-spacing: 2px; margin: 0;
         }
         .game-title .red-dot {
             display: inline-block; width: 25px; height: 25px;
             background: radial-gradient(circle, #ff4444, #990000);
             border-radius: 50%; border: 2px solid var(--gold);
-            margin: 0 4px; transform: translateY(-8px);
-            box-shadow: 0 0 5px red;
+            margin: 0 4px; transform: translateY(-8px); box-shadow: 0 0 5px red;
         }
 
         .bonus-indicator {
-            display: none;
-            color: #ff3333; font-size: 2rem; font-weight: bold;
-            text-shadow: 0 0 15px red; margin-top: 5px;
-            animation: pulse 0.5s infinite alternate;
+            display: none; color: #ff3333; font-size: 1.5rem; font-weight: bold;
+            text-shadow: 0 0 15px red; margin-top: 5px; animation: pulse 0.5s infinite alternate;
+            background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 10px; border: 1px solid red;
         }
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-        /* --- WALZEN --- */
+        /* --- WALZEN BEREICH --- */
         .main-game-area {
-            display: flex; gap: 12px; padding: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 3px solid var(--gold-dark);
-            border-radius: 15px; margin-bottom: 20px;
+            display: flex; gap: 10px; padding: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid var(--gold-dark); border-radius: 15px; margin-bottom: 20px;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* Linien-Anzeige (optional für Debugging, hier versteckt) */
+        .payline-overlay {
+            position: absolute; top:0; left:0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 20; display: none;
         }
 
         .reel-frame {
@@ -94,9 +88,8 @@
         }
 
         .reel {
-            width: 95px; height: 285px;
-            background: #fdfdfd;
-            border-radius: 4px; overflow: hidden;
+            width: 95px; height: 285px; /* 3 Symbole a 95px */
+            background: #fdfdfd; border-radius: 4px; overflow: hidden;
             display: flex; flex-direction: column; position: relative;
         }
         .reel::after {
@@ -110,12 +103,12 @@
             height: 95px; width: 95px; flex-shrink: 0;
             display: flex; justify-content: center; align-items: center;
             font-size: 50px; font-family: 'Times New Roman', serif; font-weight: bold;
+            position: relative; box-sizing: border-box;
         }
 
         .symbol img.jakob-symbol {
             width: 90%; height: 90%; object-fit: cover; object-position: center 20%;
-            border-radius: 5px; border: 3px solid var(--gold);
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            border-radius: 5px; border: 3px solid var(--gold); box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
         .sym-text { -webkit-text-stroke: 1px #000; text-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
@@ -126,18 +119,28 @@
         .sym-A  { color: #ffd700; }
         .sym-emoji { filter: drop-shadow(0 0 2px #000); }
 
+        /* Animationen */
         .symbol.win-anim {
-            background-color: rgba(255, 215, 0, 0.4);
-            animation: pop 0.6s infinite alternate; z-index: 10;
+            z-index: 10;
+            background: rgba(255, 215, 0, 0.3);
+            border: 2px solid gold;
         }
-        @keyframes pop { from { transform: scale(0.9); } to { transform: scale(1.1); } }
+        .symbol.win-anim img, .symbol.win-anim span {
+            animation: pop 0.8s infinite alternate;
+        }
+        
+        /* Expanding Animation Style */
+        .symbol.expand-anim {
+            background: gold;
+            border: 2px solid white;
+        }
+
+        @keyframes pop { from { transform: scale(0.9); } to { transform: scale(1.15); } }
 
         /* --- UI LEISTE --- */
         .bottom-ui-bar {
-            width: 100%;
-            background: linear-gradient(to bottom, #222, #000);
-            border-top: 4px solid var(--gold);
-            padding: 10px 20px;
+            width: 100%; background: linear-gradient(to bottom, #222, #000);
+            border-top: 4px solid var(--gold); padding: 10px 20px;
             display: flex; justify-content: center; gap: 15px; align-items: center;
             box-shadow: 0 -5px 20px #000;
         }
@@ -179,11 +182,10 @@
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
             background: rgba(0,0,0,0.95); padding: 40px; border: 4px solid var(--gold);
             text-align: center; border-radius: 20px; z-index: 100; transition: transform 0.3s;
-            box-shadow: 0 0 100px var(--gold);
-            min-width: 300px;
+            box-shadow: 0 0 100px var(--gold); min-width: 320px;
         }
         .overlay.show { transform: translate(-50%, -50%) scale(1); }
-        .overlay h1 { color: var(--gold); font-size: 50px; margin: 0; text-shadow: 0 0 10px #fff; line-height: 1.1; }
+        .overlay h1 { color: var(--gold); font-size: 40px; margin: 0; text-shadow: 0 0 10px #fff; line-height: 1.1; }
         .overlay h2 { color: #fff; margin: 15px 0 0 0; font-size: 24px; line-height: 1.3; }
 
         .particle { position: fixed; width: 15px; height: 15px; background: gold; z-index: 200; pointer-events: none; }
@@ -193,7 +195,7 @@
 
     <div class="title-container">
         <div class="game-title">BOOK <span class="red-dot"></span>F JAKOB</div>
-        <div class="bonus-indicator" id="bonusText">!!! FREISPIELE !!!</div>
+        <div class="bonus-indicator" id="bonusText"></div>
     </div>
 
     <div class="main-game-area">
@@ -215,38 +217,63 @@
             <div class="balance-display" id="balanceDisplay">5000.00 €</div>
         </div>
         <div class="ui-group">
-            <div class="label">Einsatz</div>
-            <input type="number" id="betInput" class="bet-input" value="10" min="1" onchange="validateBet()">
+            <div class="label">Gesamt Einsatz</div>
+            <input type="number" id="betInput" class="bet-input" value="9" min="0.9" step="0.9" onchange="validateBet()">
         </div>
         <button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()">AUTO</button>
         <button class="btn btn-spin" id="spinBtn" onclick="manualSpin()">SPIN</button>
     </div>
 
     <script>
-        // --- BALANCED MATH MODEL ---
-        const SYMBOLS = {
-            JAKOB: { type: 'image', src: 'dsc05439-1000x668.jpeg', weight: 2 }, 
-            BOOK:  { type: 'emoji', char: '📖', weight: 4 }, 
-            PHARAO:{ type: 'emoji', char: '👺', weight: 6 },
-            STATUE:{ type: 'emoji', char: '🗿', weight: 7 },
-            A:     { type: 'text',  char: 'A',  cls: 'sym-A', weight: 12 },
-            K:     { type: 'text',  char: 'K',  cls: 'sym-K', weight: 14 },
-            Q:     { type: 'text',  char: 'Q',  cls: 'sym-Q', weight: 16 },
-            J:     { type: 'text',  char: 'J',  cls: 'sym-J', weight: 18 },
-            TEN:   { type: 'text',  char: '10', cls: 'sym-10', weight: 22 }
+        // --- PAYTABLE & REGELN (Book of Ra Classic Logic) ---
+        
+        // Multiplikatoren gelten pro LINIE (Einsatz / 9)
+        // minHit: Mindestanzahl für einen Gewinn
+        const PAYTABLE = {
+            JAKOB:  { type: 'image', src: 'dsc05439-1000x668.jpeg', minHit: 2, pays: {2: 10, 3: 100, 4: 1000, 5: 5000} },
+            PHARAO: { type: 'emoji', char: '👺', minHit: 2, pays: {2: 5, 3: 40, 4: 400, 5: 2000} },
+            STATUE: { type: 'emoji', char: '🗿', minHit: 3, pays: {3: 30, 4: 100, 5: 750} },
+            SCARAB: { type: 'emoji', char: '🪲', minHit: 3, pays: {3: 30, 4: 100, 5: 750} },
+            A:      { type: 'text',  char: 'A',  cls: 'sym-A', minHit: 3, pays: {3: 5, 4: 40, 5: 150} },
+            K:      { type: 'text',  char: 'K',  cls: 'sym-K', minHit: 3, pays: {3: 5, 4: 40, 5: 150} },
+            Q:      { type: 'text',  char: 'Q',  cls: 'sym-Q', minHit: 3, pays: {3: 5, 4: 25, 5: 100} },
+            J:      { type: 'text',  char: 'J',  cls: 'sym-J', minHit: 3, pays: {3: 5, 4: 25, 5: 100} },
+            TEN:    { type: 'text',  char: '10', cls: 'sym-10', minHit: 3, pays: {3: 5, 4: 25, 5: 100} },
+            BOOK:   { type: 'emoji', char: '📖', minHit: 3, pays: {3: 2, 4: 20, 5: 200}, isScatter: true } 
+            // Buch Scatter Payout ist Multiplikator vom GESAMT-Einsatz!
         };
 
-        let symbolPool = [];
-        for (let key in SYMBOLS) {
-            for (let i = 0; i < SYMBOLS[key].weight; i++) symbolPool.push(key);
-        }
+        // Die 9 fixen Gewinnlinien (0=Oben, 1=Mitte, 2=Unten)
+        const PAYLINES = [
+            [1, 1, 1, 1, 1], // 1: Mitte
+            [0, 0, 0, 0, 0], // 2: Oben
+            [2, 2, 2, 2, 2], // 3: Unten
+            [0, 1, 2, 1, 0], // 4: V-Form
+            [2, 1, 0, 1, 2], // 5: Umgekehrtes V
+            [0, 0, 1, 2, 2], // 6: Diag Oben -> Unten (Variante)
+            [2, 2, 1, 0, 0], // 7: Diag Unten -> Oben (Variante)
+            [1, 2, 2, 2, 1], // 8: Mitte-Unten
+            [1, 0, 0, 0, 1]  // 9: Mitte-Oben
+        ];
 
+        // Gewichtung für die Walzen (Random Pool)
+        // Wir füllen einen virtuellen "Strip" mit Symbolen basierend auf Wahrscheinlichkeit
+        let reelStrip = [];
+        const weights = {
+            JAKOB: 2, PHARAO: 3, STATUE: 5, SCARAB: 5,
+            A: 8, K: 8, Q: 10, J: 10, TEN: 12, BOOK: 4 // Buch muss erreichbar sein
+        };
+        for(let k in weights) { for(let i=0; i<weights[k]; i++) reelStrip.push(k); }
+
+        // --- STATE ---
         let balance = 5000.00;
         let isSpinning = false;
         let isAuto = false;
         let freeSpins = 0;
+        let specialExpandingSymbol = null; // Für Freispiele
 
-        const reels = [0,1,2,3,4].map(i => document.getElementById(`reel${i}`));
+        // --- DOM ---
+        const reelsDOM = [0,1,2,3,4].map(i => document.getElementById(`reel${i}`));
         const balEl = document.getElementById('balanceDisplay');
         const betInp = document.getElementById('betInput');
         const spinBtn = document.getElementById('spinBtn');
@@ -254,185 +281,311 @@
         const overlay = document.getElementById('overlay');
         const bonusText = document.getElementById('bonusText');
 
-        reels.forEach(r => r.innerHTML = getRandomReelHTML());
+        // Initiale Füllung
+        let currentGrid = generateGrid();
+        renderGrid(currentGrid);
         
-        function getRandomKey() { return symbolPool[Math.floor(Math.random() * symbolPool.length)]; }
-
-        function getSymbolHTML(key) {
-            const s = SYMBOLS[key];
-            if(s.type === 'image') return `<div class="symbol" data-key="${key}"><img src="${s.src}" class="jakob-symbol"></div>`;
-            if(s.type === 'text') return `<div class="symbol" data-key="${key}"><span class="sym-text ${s.cls}">${s.char}</span></div>`;
-            return `<div class="symbol" data-key="${key}"><span class="sym-emoji">${s.char}</span></div>`;
-        }
-
-        function getRandomReelHTML() {
-            let html = '';
-            for(let i=0; i<3; i++) html += getSymbolHTML(getRandomKey());
-            return html;
-        }
-
         function validateBet() {
             let val = parseFloat(betInp.value);
-            if(isNaN(val) || val < 0.1) val = 0.10;
-            betInp.value = val;
+            // Einsatz muss durch 9 teilbar sein für saubere Linienberechnung (optional, hier egal)
+            if(isNaN(val) || val < 0.9) val = 0.90;
+            betInp.value = val.toFixed(2);
         }
 
         function toggleAuto() {
             isAuto = !isAuto;
             autoBtn.classList.toggle('active');
-            if(isAuto && !isSpinning) spin();
+            if(isAuto && !isSpinning) startSpin();
         }
-        
         function manualSpin() { 
             if(isAuto) toggleAuto(); 
-            spin(); 
+            startSpin(); 
         }
 
-        function spin() {
+        // --- HAUPTSPIEL LOGIK ---
+        
+        function startSpin() {
             if(isSpinning) return;
-            let bet = parseFloat(betInp.value);
+            let totalBet = parseFloat(betInp.value);
 
+            // Einsatz abziehen (wenn keine Freispiele)
             if(freeSpins === 0) {
-                if(balance < bet) { 
-                    alert("Nicht genug Guthaben!"); 
+                if(balance < totalBet) { 
+                    alert("Guthaben leer! Thorsten muss helfen (Cheat)..."); 
                     if(isAuto) toggleAuto();
                     return; 
                 }
-                balance -= bet;
+                balance -= totalBet;
             } else {
                 freeSpins--;
-                updateFreeSpinUI();
+                updateBonusUI();
             }
             updateUI();
 
             isSpinning = true;
             spinBtn.disabled = true;
             overlay.classList.remove('show');
+            
+            // Animation starten
+            // Wir erzeugen das Endergebnis sofort, animieren aber die Walzen
+            let finalGrid = generateGrid();
+            
+            // Walzen drehen (visuell)
+            reelsDOM.forEach((r, i) => {
+                // Alte Win-Klassen entfernen
+                r.querySelectorAll('.symbol').forEach(s => {
+                    s.classList.remove('win-anim');
+                    s.classList.remove('expand-anim');
+                });
 
-            let finalGrid = [];
-            reels.forEach((reel, i) => {
-                reel.querySelectorAll('.symbol').forEach(s => s.classList.remove('win-anim'));
-                let speed = 50;
-                let timer = setInterval(() => reel.innerHTML = getRandomReelHTML(), speed);
-
-                setTimeout(() => {
-                    clearInterval(timer);
-                    let colData = [];
-                    let html = '';
-                    for(let r=0; r<3; r++) {
-                        let k = getRandomKey();
-                        colData.push(k);
-                        html += getSymbolHTML(k);
+                let speed = 60;
+                let steps = 10 + (i * 5); // Jede Walze dreht länger
+                let currentStep = 0;
+                
+                let spinInterval = setInterval(() => {
+                    // Zufällige Symbole während Dreh
+                    r.innerHTML = getRandomReelHTML();
+                    currentStep++;
+                    
+                    if(currentStep >= steps) {
+                        clearInterval(spinInterval);
+                        // Endergebnis setzen
+                        renderReel(i, finalGrid[i]); // finalGrid ist Spalte-basiert? Nein, Spalte i
+                        
+                        // Wenn letzte Walze steht -> Auswertung
+                        if(i === 4) evaluateSpin(finalGrid, totalBet);
                     }
-                    reel.innerHTML = html;
-                    finalGrid.push(colData);
-                    if(i === 4) checkWin(finalGrid, bet);
-                }, 400 + (i * 200));
+                }, speed);
             });
         }
 
-        function checkWin(grid, bet) {
-            isSpinning = false; spinBtn.disabled = false;
-            let win = 0;
-            let triggerBonus = false;
+        function evaluateSpin(grid, totalBet) {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            let spinWin = 0;
+            let lineBet = totalBet / 9;
+            let wonFreeSpins = false;
+            let wonLines = []; // Um Animationen zu steuern
 
-            // 1. SCATTER
-            let books = 0;
-            grid.forEach(col => col.forEach(key => { if(key === 'BOOK') books++; }));
+            // --- 1. GEWINNLINIEN AUSWERTUNG ---
+            for(let lineIdx = 0; lineIdx < 9; lineIdx++) {
+                let coords = PAYLINES[lineIdx]; // z.B. [1,1,1,1,1]
+                
+                // Hole Symbole auf dieser Linie
+                let lineSymbols = coords.map((row, col) => grid[col][row]);
+                
+                // Bestimme das Target-Symbol (Das erste, das kein BUCH ist)
+                // Buch ist Wild für alles außer expanding (in Bonus). Hier im Basisspiel normal Wild.
+                let targetSymbol = null;
+                for(let s of lineSymbols) {
+                    if(s !== 'BOOK') { targetSymbol = s; break; }
+                }
+                // Wenn nur Bücher: Target ist Buch (5 Bücher auf Linie = Jackpot, aber Scatter zahlt meist besser)
+                if(!targetSymbol) targetSymbol = 'BOOK'; 
+
+                // Zähle zusammenhängende Treffer von links
+                let count = 0;
+                for(let s of lineSymbols) {
+                    if(s === targetSymbol || s === 'BOOK') {
+                        count++;
+                    } else {
+                        break; // Kette unterbrochen
+                    }
+                }
+
+                // Prüfe Paytable
+                let payInfo = PAYTABLE[targetSymbol];
+                if(count >= payInfo.minHit) {
+                    // Gewinn!
+                    let winVal = payInfo.pays[count] * lineBet;
+                    spinWin += winVal;
+                    
+                    // Visuell markieren (nur die gewinnenden Symbole auf der Linie)
+                    for(let c=0; c<count; c++) {
+                        let reel = c;
+                        let row = coords[c];
+                        // DOM Element finden und Klasse adden
+                        let symEl = reelsDOM[reel].children[row];
+                        if(symEl) symEl.classList.add('win-anim');
+                    }
+                }
+            }
+
+            // --- 2. SCATTER AUSWERTUNG (Bücher) ---
+            let bookCount = 0;
+            grid.forEach(col => col.forEach(s => { if(s === 'BOOK') bookCount++; }));
             
-            if(books >= 3) {
-                triggerBonus = true;
-                win += bet * books * 2; 
+            if(bookCount >= 3) {
+                // Scatter Win (Basiert auf Gesamteinsatz!)
+                let scatterPay = PAYTABLE.BOOK.pays[bookCount] * totalBet;
+                spinWin += scatterPay;
+                
+                // Trigger Freispiele
+                wonFreeSpins = true;
                 if(freeSpins > 0) {
-                    freeSpins += 10;
-                    showOverlay("RETRIGGER!", "+10 SPIELE");
+                    freeSpins += 10; // Retrigger
+                    showOverlay("RETRIGGER!", "+10 GAMES");
                 } else {
                     freeSpins = 10;
-                    showOverlay("BONUS!", "10 FREISPIELE");
-                    updateFreeSpinUI();
+                    // Zufälliges Expanding Symbol wählen (kein Buch)
+                    let keys = Object.keys(PAYTABLE).filter(k => k !== 'BOOK');
+                    specialExpandingSymbol = keys[Math.floor(Math.random() * keys.length)];
+                    
+                    let symChar = PAYTABLE[specialExpandingSymbol].char || PAYTABLE[specialExpandingSymbol].src;
+                    let msg = `Symbol: ${specialExpandingSymbol}`;
+                    if(PAYTABLE[specialExpandingSymbol].type === 'image') msg = "Symbol: JAKOB";
+                    
+                    showOverlay("BONUS!", `10 FREISPIELE\n${msg}`);
+                    updateBonusUI();
                 }
             }
 
-            // 2. LINIE
-            let line = grid.map(c => c[1]);
-            let first = line[0];
-            let count = 1;
-            
-            for(let i=1; i<5; i++) {
-                if(line[i] === first || line[i] === 'BOOK' || first === 'BOOK') {
-                    count++;
-                    if(first === 'BOOK' && line[i] !== 'BOOK') first = line[i]; 
-                } else {
-                    break;
+            // --- 3. EXPANDING SYMBOL (Nur in Freispielen) ---
+            if(freeSpins > 0 && specialExpandingSymbol && !wonFreeSpins) { // Wenn gerade gewonnen, erst nächster Spin
+                // Zähle, auf wie vielen Walzen das Symbol vorkommt (egal wo)
+                let reelsWithSymbol = [];
+                for(let col=0; col<5; col++) {
+                    if(grid[col].includes(specialExpandingSymbol)) {
+                        reelsWithSymbol.push(col);
+                    }
+                }
+                
+                let expandCount = reelsWithSymbol.length;
+                let expInfo = PAYTABLE[specialExpandingSymbol];
+                
+                // Zahlt es? (Wie Scatter Paytable, aber auf allen 9 Linien)
+                // "Zahlt wie normale Linie, aber auf allen Linien und muss nicht verbunden sein"
+                // Im Classic: Wenn minHit erreicht, expandieren die Walzen und zahlen für alle aktiven Linien.
+                if(expandCount >= expInfo.minHit) {
+                    // Visuelle Expansion
+                    reelsWithSymbol.forEach(col => {
+                        // Alle 3 Positionen der Walze visuell ersetzen
+                        let reelEl = reelsDOM[col];
+                        Array.from(reelEl.children).forEach(child => {
+                            child.innerHTML = getSymbolInnerHTML(specialExpandingSymbol);
+                            child.classList.add('expand-anim');
+                        });
+                    });
+                    
+                    // Berechnung: Gewinn pro Linie für X Treffer * 9 Linien
+                    let symbolWinPerLine = expInfo.pays[expandCount] * lineBet;
+                    let totalExpandWin = symbolWinPerLine * 9;
+                    
+                    spinWin += totalExpandWin;
+                    setTimeout(() => showOverlay("EXPANDING!", formatMoney(totalExpandWin)), 1000);
                 }
             }
 
-            if(count >= 3) {
-                let mult = 5; 
-                if(first === 'JAKOB') mult = 100;
-                else if(first === 'PHARAO' || first === 'STATUE') mult = 30;
-                else if(first === 'A' || first === 'K') mult = 10;
-                
-                let lineWin = bet * mult * (count - 2); 
-                if(count > 3) lineWin *= 2;
-                
-                win += lineWin;
-                for(let i=0; i<count; i++) reels[i].children[1].classList.add('win-anim');
-                
-                if(!triggerBonus && win > bet * 3) {
-                    showOverlay("GEWINN!", win.toFixed(2) + " €");
-                    if(win > bet * 20) confetti();
+            // --- ENDE ---
+            if(spinWin > 0) {
+                balance += spinWin;
+                if(spinWin > totalBet * 10) {
+                    if(!wonFreeSpins) showOverlay("BIG WIN", formatMoney(spinWin));
+                    confetti();
                 }
             }
+            updateUI();
 
-            if(win > 0) {
-                balance += win;
-                updateUI();
+            // Auto / Bonus Loop
+            handleNextSpinLogic();
+        }
+
+        // --- HILFSFUNKTIONEN ---
+
+        function generateGrid() {
+            // Erstellt 5 Spalten a 3 Symbole
+            let g = [];
+            for(let i=0; i<5; i++) {
+                let col = [];
+                for(let j=0; j<3; j++) col.push(getRandomSymbolKey());
+                g.push(col);
             }
+            return g;
+        }
 
-            // AUTO-SPIN LOGIK
+        function getRandomSymbolKey() {
+            return reelStrip[Math.floor(Math.random() * reelStrip.length)];
+        }
+
+        function getSymbolInnerHTML(key) {
+            let s = PAYTABLE[key];
+            if(s.type === 'image') return `<img src="${s.src}" class="jakob-symbol">`;
+            if(s.type === 'text') return `<span class="sym-text ${s.cls}">${s.char}</span>`;
+            return `<span class="sym-emoji">${s.char}</span>`;
+        }
+        
+        // Rendert eine ganze Walze sofort (für Init oder Stop)
+        function renderReel(colIndex, symbols) {
+            let html = '';
+            symbols.forEach(key => {
+                html += `<div class="symbol" data-key="${key}">${getSymbolInnerHTML(key)}</div>`;
+            });
+            reelsDOM[colIndex].innerHTML = html;
+        }
+        
+        // Rendert Grid (für Init)
+        function renderGrid(grid) {
+            grid.forEach((col, i) => renderReel(i, col));
+        }
+
+        // Zufalls-HTML für Animation
+        function getRandomReelHTML() {
+            let html = '';
+            for(let i=0; i<3; i++) {
+                let k = getRandomSymbolKey();
+                html += `<div class="symbol">${getSymbolInnerHTML(k)}</div>`;
+            }
+            return html;
+        }
+
+        function handleNextSpinLogic() {
             if (freeSpins > 0) {
-                setTimeout(spin, 1500);
+                setTimeout(startSpin, 1500); // Automatischer Freispiel-Start
             } 
             else {
                 if (document.body.classList.contains('bonus-active')) {
-                    document.body.classList.remove('bonus-active');
-                    bonusText.style.display = 'none';
-                    spinBtn.innerText = "SPIN";
-                    if (isAuto) {
-                        setTimeout(spin, 2500); 
-                    }
+                    // Bonus zu Ende
+                    setTimeout(() => {
+                        document.body.classList.remove('bonus-active');
+                        bonusText.style.display = 'none';
+                        specialExpandingSymbol = null;
+                        spinBtn.innerText = "SPIN";
+                        alert("Bonusrunde beendet!");
+                        if (isAuto) setTimeout(startSpin, 1000);
+                    }, 2000);
                 } 
                 else if (isAuto) {
-                    let delay = (win > 0 || triggerBonus) ? 2000 : 600;
-                    setTimeout(spin, delay);
+                    setTimeout(startSpin, 800);
                 }
             }
         }
 
-        function updateUI() { balEl.innerText = balance.toFixed(2) + " €"; }
+        function updateUI() {
+            balEl.innerText = formatMoney(balance);
+        }
 
-        function updateFreeSpinUI() {
+        function updateBonusUI() {
             if(freeSpins > 0) {
                 document.body.classList.add('bonus-active');
                 bonusText.style.display = 'block';
-                bonusText.innerText = "FREISPIELE: " + freeSpins;
+                let symName = (specialExpandingSymbol === 'JAKOB') ? 'JAKOB' : PAYTABLE[specialExpandingSymbol].char;
+                bonusText.innerText = `FREISPIELE: ${freeSpins} | SYMBOL: ${symName}`;
                 spinBtn.innerText = freeSpins;
-            } else {
-                spinBtn.innerText = "SPIN";
             }
         }
+
+        function formatMoney(n) { return n.toFixed(2) + " €"; }
 
         function showOverlay(t, v) {
             let el = document.getElementById('overlay');
             document.getElementById('overlayTitle').innerText = t;
             document.getElementById('overlayValue').innerText = v;
             el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 2500); // Etwas länger anzeigen für den langen Text
+            setTimeout(() => el.classList.remove('show'), 2000);
         }
 
         function confetti() {
-            for(let i=0; i<40; i++) {
+            for(let i=0; i<50; i++) {
                 let p = document.createElement('div');
                 p.className = 'particle';
                 p.style.left = Math.random()*100+'vw';
@@ -444,25 +597,22 @@
             }
         }
 
-        // --- CHEAT CODE LOGIK (abgasskandal) ---
+        // CHEAT
         let inputSequence = [];
         const cheatString = "abgasskandal";
-
         window.addEventListener('keyup', (e) => {
             inputSequence.push(e.key.toLowerCase());
-            if (inputSequence.length > cheatString.length) {
-                inputSequence.shift();
-            }
+            if (inputSequence.length > cheatString.length) inputSequence.shift();
             if (inputSequence.join('') === cheatString) {
                 balance += 1000000;
                 updateUI();
-                // HIER IST DIE NEUE SCHWEIGEGELD-NACHRICHT:
                 showOverlay("SCHWEIGEGELD!", "Thorsten hat dir 1.000.000 € geschickt!");
-                confetti(); 
+                confetti();
                 inputSequence = [];
             }
         });
-        
+
+        // CSS Injection für Confetti
         const styleSheet = document.createElement("style");
         styleSheet.innerText = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
         document.head.appendChild(styleSheet);
